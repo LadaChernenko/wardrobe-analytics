@@ -1,0 +1,101 @@
+############################
+# OS / Editor
+############################
+.DS_Store
+Thumbs.db
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+
+############################
+# Python
+############################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+
+.env
+./docker/.env
+*.env.*
+!.env.example
+
+.venv/
+venv/
+ENV/
+env/
+*env/
+
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+dist/
+build/
+notebooks/*
+
+############################
+# Tests / Coverage
+############################
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+
+############################
+# Logs
+############################
+*.log
+logs/
+log/
+
+############################
+# Docker
+############################
+docker-compose.override.yml
+*.pid
+
+############################
+# PostgreSQL
+############################
+docker/dbdata/
+*.sql
+*.dump
+
+############################
+# HuggingFace / ML
+############################
+.cache/
+cache/
+
+# HuggingFace default cache
+~/.cache/huggingface/
+**/huggingface/
+**/hf_cache/
+
+# Model weights / artifacts
+*.bin
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.safetensors
+
+############################
+# Data / Artifacts
+############################
+data/
+datasets/
+outputs/
+artifacts/
+checkpoints/
+
+############################
+# Temporary files
+############################
+tmp/
+temp/

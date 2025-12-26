@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавление предмета</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 420px;
+            margin: 40px auto;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        input, button {
+            padding: 8px;
+            font-size: 15px;
+        }
+        button {
+            cursor: pointer;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+    <h2>Добавить предмет</h2>
+
+    <form id="itemForm">
+        <input name="item" placeholder="Название" required>
+        <input name="brand" placeholder="Бренд">
+        <input name="season" placeholder="Сезон" required>
+        <input name="year_of_buying" placeholder="Год покупки" type="number" required>
+        <input name="category" placeholder="Категория" required>
+        <input name="damage" placeholder="Повреждения">
+        <input name="extra_colour" placeholder="Доп. цвет">
+        <input name="colour" placeholder="Цвет">
+
+        <input name="cost" placeholder="Стоимость" type="number" required>
+        <input name="use" placeholder="Использований" type="number" required>
+
+        <input name="image_path" placeholder="Путь к изображению">
+
+        <button type="submit">Создать</button>
+    </form>
+
+    <p id="status"></p>
+
+    <script>
+        const form = document.getElementById("itemForm");
+        const statusEl = document.getElementById("status");
+
+        form.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            statusEl.textContent = "Отправка...";
+            statusEl.className = "";
+
+            const formData = new FormData(form);
+            const data = {};
+
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            // числовые поля → числа
+            data.cost = Number(data.cost);
+            data.use = Number(data.use);
+
+            // сервер сам пересчитает cost_per_use
+            data.cost_per_use = 0;
+
+            try {
+                const response = await fetch("http://localhost:6000/items/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(errText);
+                }
+
+                statusEl.textContent = "✔ Предмет добавлен!";
+                statusEl.className = "success";
+
+                form.reset();
+
+            } catch (error) {
+                console.error(error);
+                statusEl.textContent = "Ошибка: не удалось добавить предмет.";
+                statusEl.className = "error";
+            }
+        });
+    </script>
+
+</body>
+</html>
