@@ -35,4 +35,15 @@ wardrobe_api/
 sudo docker compose -f ./docker/docker-compose.yml up --build --detach
 ```
 
+Как добавить в БД данные из готовой таблицы: 
+```bash
+sudo docker exec -it wardrobe_main_api_backend python src/scripts/load_items_from_csv.py
+```
+
+как посмотреть что там в таблице: 
+```bash
+sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM items ORDER BY id DESC LIMIT 10 ;" 
+
+sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM wear_log ORDER BY id DESC LIMIT 10 ;" 
+```
 ## TODO:

@@ -2,8 +2,7 @@ import os
 import csv
 from tqdm import tqdm
 
-from core.services.wardrop_segmentation import save_segmented_clothing
-
+from core.services.wardrop_segmentation import clothes_segmentator
 
 def segment_clothes_from_csv(
     csv_path: str,
@@ -32,7 +31,7 @@ def segment_clothes_from_csv(
                 continue
 
             try:
-                save_segmented_clothing(
+                clothes_segmentator.save_segmented_clothing(
                     image_path=image_path,
                     category=category,
                     output_path=output_path,

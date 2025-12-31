@@ -14,7 +14,7 @@
             flex-direction: column;
             gap: 10px;
         }
-        input, button {
+        input, select, button {
             padding: 8px;
             font-size: 15px;
         }
@@ -23,79 +23,108 @@
         }
         .success { color: green; }
         .error { color: red; }
+        img {
+            max-width: 100%;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <h2>Добавить предмет</h2>
+<h2>Добавить предмет</h2>
 
-    <form id="itemForm">
-        <input name="item" placeholder="Название" required>
-        <input name="brand" placeholder="Бренд">
-        <input name="season" placeholder="Сезон" required>
-        <input name="year_of_buying" placeholder="Год покупки" type="number" required>
-        <input name="category" placeholder="Категория" required>
-        <input name="damage" placeholder="Повреждения">
-        <input name="extra_colour" placeholder="Доп. цвет">
-        <input name="colour" placeholder="Цвет">
+<form id="itemForm" enctype="multipart/form-data">
 
-        <input name="cost" placeholder="Стоимость" type="number" required>
-        <input name="use" placeholder="Использований" type="number" required>
+    <input name="item" placeholder="Название" required>
+    <input name="brand" placeholder="Бренд">
 
-        <input name="image_path" placeholder="Путь к изображению">
+    <!-- CATEGORY -->
+    <select name="category" required>
+        <option value="" disabled selected>Категория</option>
+        <option value="Skirt">Юбка</option>
+        <option value="Upper-clothes">Верхняя одежда</option>
+        <option value="Pants">Брюки</option>
+        <option value="Dress">Платье</option>
+        <option value="Bag">Сумка</option>
+        <option value="Hat">Головной убор</option>
+        <option value="Shoes">Обувь</option>
+        <option value="Sunglasses">Солнцезащитные очки</option>
+        <option value="Belt">Ремень</option>
+        <option value="Scarf">Шарф</option>
+    </select>
 
-        <button type="submit">Создать</button>
-    </form>
+    <!-- SEASON -->
+    <select name="season" required>
+        <option value="" disabled selected>Сезон</option>
+        <option value="winter">Зима</option>
+        <option value="summer">Лето</option>
+        <option value="off_season">Межсезонье</option>
+    </select>
 
-    <p id="status"></p>
+    <input name="year_of_buying" placeholder="Год покупки" type="number" required>
+    <input name="style" placeholder="Стиль" required>
+    <input name="damage" placeholder="Повреждения">
+    <input name="extra_colour" placeholder="Доп. цвет">
+    <input name="colour" placeholder="Основной цвет">
 
-    <script>
-        const form = document.getElementById("itemForm");
-        const statusEl = document.getElementById("status");
+    <input name="cost" placeholder="Стоимость" type="number" required>
+    <input name="use" placeholder="Использований" type="number" required>
 
-        form.addEventListener("submit", async function (e) {
-            e.preventDefault();
-            statusEl.textContent = "Отправка...";
-            statusEl.className = "";
+    <input type="file" name="image" accept="image/*">
 
-            const formData = new FormData(form);
-            const data = {};
+    <button type="submit">Создать</button>
+</form>
 
-            formData.forEach((value, key) => {
-                data[key] = value;
+<img id="preview">
+<p id="status"></p>
+
+<script>
+    const form = document.getElementById("itemForm");
+    const statusEl = document.getElementById("status");
+    const preview = document.getElementById("preview");
+    const imageInput = form.querySelector('input[name="image"]');
+
+    imageInput.addEventListener("change", () => {
+        const file = imageInput.files[0];
+        if (!file) {
+            preview.style.display = "none";
+            return;
+        }
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+    });
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        statusEl.textContent = "Отправка...";
+        statusEl.className = "";
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch("/items/", {
+                method: "POST",
+                body: formData
             });
 
-            // числовые поля → числа
-            data.cost = Number(data.cost);
-            data.use = Number(data.use);
-
-            // сервер сам пересчитает cost_per_use
-            data.cost_per_use = 0;
-
-            try {
-                const response = await fetch("http://localhost:6000/items/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(errText);
-                }
-
-                statusEl.textContent = "✔ Предмет добавлен!";
-                statusEl.className = "success";
-
-                form.reset();
-
-            } catch (error) {
-                console.error(error);
-                statusEl.textContent = "Ошибка: не удалось добавить предмет.";
-                statusEl.className = "error";
+            if (!response.ok) {
+                throw new Error(await response.text());
             }
-        });
-    </script>
+
+            statusEl.textContent = "✔ Предмет добавлен!";
+            statusEl.className = "success";
+            form.reset();
+            preview.style.display = "none";
+
+        } catch (error) {
+            console.error(error);
+            statusEl.textContent = "Ошибка: не удалось добавить предмет.";
+            statusEl.className = "error";
+        }
+    });
+</script>
 
 </body>
 </html>

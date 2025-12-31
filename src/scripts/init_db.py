@@ -1,13 +1,11 @@
 import pandas as pd
 from sqlalchemy import text
 from core.database import sync_engine, get_sync_session
+from core.settings import df_path
 from models.item import Item
 
-# Загружаем CSV/Excel с твоими данными
-# Для примера: сохрани таблицу в data/items.csv
-data = pd.read_csv("/app/data/items.csv", sep="\t")  # или другой разделитель
+data = pd.read_csv(df_path, sep="\t")  # или другой разделитель
 
-# Создаём таблицу в БД
 ModelBase = Item.metadata
 ModelBase.create_all(sync_engine)
 
@@ -18,8 +16,9 @@ with get_sync_session() as session:
             item=row["item"],
             brand=row.get("brand"),
             season=row["season"],
-            year_of_buying=row["year_of_bying"],  # поправим в CSV на "year_of_buying"
+            year_of_buying=row["year_of_bying"],
             category=row["category"],
+            style=row["style"],
             damage=row.get("demage"),
             extra_colour=row.get("extra_colour"),
             colour=row.get("colour"),
@@ -30,4 +29,4 @@ with get_sync_session() as session:
         session.add(item)
     session.commit()
 
-print("✅ Таблица items создана и заполнена.")
+print("Таблица items создана и заполнена.")

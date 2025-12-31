@@ -8,6 +8,7 @@ class ItemBase(BaseModel):
     season: str
     year_of_buying: int
     category: str
+    style: str
     damage: Optional[str] = None
     extra_colour: Optional[str] = None
     colour: Optional[str] = None
@@ -16,8 +17,18 @@ class ItemBase(BaseModel):
     cost_per_use: float
     image_path: Optional[str] = None
 
-class ItemCreate(ItemBase):
-    pass
+class ItemCreate(BaseModel):
+    item: str
+    brand: Optional[str] = None
+    season: str
+    year_of_buying: int
+    category: str
+    style: str
+    damage: Optional[str] = None
+    extra_colour: Optional[str] = None
+    colour: Optional[str] = None
+    cost: int
+    use: int
 
 class ItemRead(ItemBase):
     id: int

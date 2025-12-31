@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from core.database import sync_engine
 from models.item import Item
 from models.wear_log import WearLog
@@ -10,6 +11,17 @@ from api.item_router import router as item_router
 app = FastAPI(title="Wardrobe API")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Создание таблиц при старте
 @app.on_event("startup")
 def on_startup():

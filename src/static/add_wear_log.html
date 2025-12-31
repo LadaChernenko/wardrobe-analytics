@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить ношение</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            border: 2px solid #ccc;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            background: #f9f9f9;
+            user-select: none;
+        }
+
+        .cell:hover {
+            background: #eee;
+        }
+
+        .cell.selected {
+            border-color: #4caf50;
+            background: #e8f5e9;
+            font-weight: bold;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input, textarea, button {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-width: 250px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+<h2>Добавить запись о ношении</h2>
+
+<div id="itemsGrid" class="grid"></div>
+
+<form id="wearForm">
+    <input type="date" name="date" required>
+    <textarea name="notes" placeholder="Заметка (опционально)"></textarea>
+    <button type="submit">Сохранить</button>
+</form>
+
+<p id="status"></p>
+
+<script>
+    const grid = document.getElementById("itemsGrid");
+    const form = document.getElementById("wearForm");
+    const statusEl = document.getElementById("status");
+
+    let selectedItemId = null;
+
+    async function loadItems() {
+        try {
+            const response = await fetch("/items/");
+            if (!response.ok) throw new Error("Failed to load items");
+
+            const items = await response.json();
+
+            items.forEach(item => {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.textContent = item.item;
+                cell.dataset.id = item.id;
+
+                cell.addEventListener("click", () => {
+                    document.querySelectorAll(".cell").forEach(c =>
+                        c.classList.remove("selected")
+                    );
+                    cell.classList.add("selected");
+                    selectedItemId = item.id;
+                });
+
+                grid.appendChild(cell);
+            });
+
+        } catch (err) {
+            console.error(err);
+            statusEl.textContent = "Ошибка загрузки items";
+            statusEl.className = "error";
+        }
+    }
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!selectedItemId) {
+            statusEl.textContent = "Выберите предмет одежды";
+            statusEl.className = "error";
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        const payload = {
+            item_id: selectedItemId,
+            date: formData.get("date"),
+            notes: formData.get("notes") || null
+        };
+
+        try {
+            const response = await fetch("/wear_log/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(await response.text());
+            }
+
+            statusEl.textContent = "✔ Запись добавлена";
+            statusEl.className = "success";
+            form.reset();
+
+            document.querySelectorAll(".cell")
+                .forEach(c => c.classList.remove("selected"));
+            selectedItemId = null;
+
+        } catch (err) {
+            console.error(err);
+            statusEl.textContent = "Ошибка при сохранении";
+            statusEl.className = "error";
+        }
+    });
+
+    loadItems();
+</script>
+
+</body>
+</html>
