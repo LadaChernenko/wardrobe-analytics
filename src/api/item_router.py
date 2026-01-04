@@ -83,7 +83,7 @@ def create_item(
                 cost=cost,
                 use=use,
                 cost_per_use=cost_per_use,
-                image_path=str(image_path),
+                image_path=str(filename),
             )
             logger.info(f'Item {item} added to DataBase')
         except Exception as e:
@@ -112,3 +112,102 @@ def get_item(item_id: int):
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
         return item
+
+@router.patch("/{item_id}", response_model=ItemRead)
+def update_item(
+    item_id: int,
+    item: str | None = Form(None),
+    brand: str | None = Form(None),
+    season: SeasonEnum | None = Form(None),
+    year_of_buying: int | None = Form(None),
+    category: CategoryEnum | None = Form(None),
+    style: str | None = Form(None),
+    damage: str | None = Form(None),
+    extra_colour: str | None = Form(None),
+    colour: str | None = Form(None),
+    cost: int | None = Form(None),
+    use: int | None = Form(None),
+    image: UploadFile | None = File(None),
+):
+    with get_sync_session() as session:
+        item_obj = session.query(Item).filter(Item.id == item_id).first()
+        if not item_obj:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        for field, value in {
+            "item": item,
+            "brand": brand,
+            "season": season,
+            "year_of_buying": year_of_buying,
+            "category": category,
+            "style": style,
+            "damage": damage,
+            "extra_colour": extra_colour,
+            "colour": colour,
+            "cost": cost,
+            "use": use,
+        }.items():
+            if value is not None:
+                setattr(item_obj, field, value)
+
+        if cost is not None or use is not None:
+            current_cost = cost if cost is not None else item_obj.cost
+            current_use = use if use is not None else item_obj.use
+            item_obj.cost_per_use = (
+                round(current_cost / current_use, 2)
+                if current_use > 0
+                else float(current_cost)
+            )
+
+        if image:
+
+            if item_obj.image_path:
+                old_path = UPLOAD_DIR / item_obj.image_path
+                if old_path.exists():
+                    old_path.unlink()
+
+            ext = Path(image.filename).suffix
+            filename = f"{uuid.uuid4()}{ext}"
+            save_path = UPLOAD_DIR / filename
+
+            try:
+                with save_path.open("wb") as f:
+                    f.write(image.file.read())
+
+                clothes_segmentator.save_segmented_clothing(
+                    image_path=save_path,
+                    category=item_obj.category,
+                    output_path=SEGMENT_DIR,
+                )
+
+                item_obj.image_path = filename
+                logger.info(f"Item {item_id} image updated")
+
+            except Exception as e:
+                logger.error(f"Fail to update image for item {item_id}: {e}")
+                raise HTTPException(status_code=500, detail="Image update failed")
+
+        session.commit()
+        session.refresh(item_obj)
+        return item_obj
+    
+@router.delete("/{item_id}", status_code=204)
+def delete_item(item_id: int):
+    with get_sync_session() as session:
+        item_obj = session.query(Item).filter(Item.id == item_id).first()
+        if not item_obj:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        if item_obj.image_path:
+            image_path = UPLOAD_DIR / item_obj.image_path
+            if image_path.exists():
+                image_path.unlink()
+
+        segmented_path = SEGMENT_DIR / item_obj.image_path
+        if segmented_path.exists():
+            segmented_path.unlink()
+
+        session.delete(item_obj)
+        session.commit()
+
+        logger.info(f"Item {item_id} deleted")

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 class WearLogCreate(BaseModel):
     item_id: int
+    event_id: int
     date: date
     notes: str | None = None
 
@@ -11,6 +12,7 @@ class WearLogCreate(BaseModel):
 class WearLogRead(BaseModel):
     id: int
     item_id: int
+    event_id: int | None
     date: date
     notes: str | None
 

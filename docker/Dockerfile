@@ -19,4 +19,4 @@ WORKDIR /app/src
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "6000"]
 
-##--no-cache-dir 
+##--no-cache-dir alembic -c alembic/alembic.ini upgrade head && \

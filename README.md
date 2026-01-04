@@ -45,5 +45,12 @@ sudo docker exec -it wardrobe_main_api_backend python src/scripts/load_items_fro
 sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM items ORDER BY id DESC LIMIT 10 ;" 
 
 sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM wear_log ORDER BY id DESC LIMIT 10 ;" 
+
+sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM items WHERE category ='pants' ORDER BY id DESC LIMIT 10;"
 ```
 ## TODO:
+
+```bash
+sudo docker exec -it wardrobe_main_api_backend bash
+alembic -c alembic/alembic.ini revision --autogenerate -m "add event_id to wear_log"
+```

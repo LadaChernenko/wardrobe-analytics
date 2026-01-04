@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import sync_engine
@@ -6,11 +7,14 @@ from models.item import Item
 from models.wear_log import WearLog
 from api.wear_log_router import router as wear_log_router
 from api.item_router import router as item_router
+from core.settings import settings
 
 
 app = FastAPI(title="Wardrobe API")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+segmented_path = Path(settings.data_root_path, "segmented")
+app.mount("/segmented", StaticFiles(directory=segmented_path), name="segmented")
 
 app.add_middleware(
     CORSMiddleware,

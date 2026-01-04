@@ -2,167 +2,188 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Добавить ношение</title>
+    <title>Wear Log</title>
 
     <style>
         body {
             font-family: sans-serif;
-            max-width: 900px;
+            max-width: 1000px;
             margin: 30px auto;
         }
 
-        h2 {
+        h2, h3 {
             margin-bottom: 10px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .cell {
-            border: 2px solid #ccc;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 6px;
-            background: #f9f9f9;
-            user-select: none;
-        }
-
-        .cell:hover {
-            background: #eee;
-        }
-
-        .cell.selected {
-            border-color: #4caf50;
-            background: #e8f5e9;
-            font-weight: bold;
-        }
-
-        form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        input, textarea, button {
-            padding: 8px;
-            font-size: 14px;
-        }
-
-        textarea {
-            resize: vertical;
-            min-width: 250px;
         }
 
         button {
             cursor: pointer;
         }
 
-        .success { color: green; }
-        .error { color: red; }
+        /* ===== events ===== */
+
+        .event {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event-logs {
+            margin-top: 8px;
+            margin-left: 15px;
+        }
+
+        .log-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .muted {
+            color: #888;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
 
-<h2>Добавить запись о ношении</h2>
+<h2>Добавить выход</h2>
 
-<div id="itemsGrid" class="grid"></div>
+<hr>
 
-<form id="wearForm">
-    <input type="date" name="date" required>
-    <textarea name="notes" placeholder="Заметка (опционально)"></textarea>
-    <button type="submit">Сохранить</button>
-</form>
-
-<p id="status"></p>
+<h3>История выходов</h3>
+<div id="eventsList"></div>
 
 <script>
-    const grid = document.getElementById("itemsGrid");
-    const form = document.getElementById("wearForm");
-    const statusEl = document.getElementById("status");
+const eventsList = document.getElementById("eventsList");
 
-    let selectedItemId = null;
+// item_id -> item name
+const itemsById = {};
 
-    async function loadItems() {
-        try {
-            const response = await fetch("/items/");
-            if (!response.ok) throw new Error("Failed to load items");
+/* ===== load items ===== */
 
-            const items = await response.json();
+async function loadItems() {
+    const res = await fetch("/items/");
+    const items = await res.json();
 
-            items.forEach(item => {
-                const cell = document.createElement("div");
-                cell.className = "cell";
-                cell.textContent = item.item;
-                cell.dataset.id = item.id;
+    items.forEach(item => {
+        itemsById[item.id] = item.item;
+    });
+}
 
-                cell.addEventListener("click", () => {
-                    document.querySelectorAll(".cell").forEach(c =>
-                        c.classList.remove("selected")
-                    );
-                    cell.classList.add("selected");
-                    selectedItemId = item.id;
-                });
+/* ===== load & prepare events ===== */
 
-                grid.appendChild(cell);
-            });
+async function loadEvents() {
+    const res = await fetch("/wear_log/");
+    const logs = await res.json();
 
-        } catch (err) {
-            console.error(err);
-            statusEl.textContent = "Ошибка загрузки items";
-            statusEl.className = "error";
-        }
-    }
+    // event_id -> { date, logs[] }
+    const eventsMap = {};
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        if (!selectedItemId) {
-            statusEl.textContent = "Выберите предмет одежды";
-            statusEl.className = "error";
-            return;
+    logs.forEach(log => {
+        if (!eventsMap[log.event_id]) {
+            eventsMap[log.event_id] = {
+                date: log.date,
+                logs: []
+            };
         }
 
-        const formData = new FormData(form);
+        eventsMap[log.event_id].logs.push(log);
 
-        const payload = {
-            item_id: selectedItemId,
-            date: formData.get("date"),
-            notes: formData.get("notes") || null
-        };
-
-        try {
-            const response = await fetch("/wear_log/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                throw new Error(await response.text());
-            }
-
-            statusEl.textContent = "✔ Запись добавлена";
-            statusEl.className = "success";
-            form.reset();
-
-            document.querySelectorAll(".cell")
-                .forEach(c => c.classList.remove("selected"));
-            selectedItemId = null;
-
-        } catch (err) {
-            console.error(err);
-            statusEl.textContent = "Ошибка при сохранении";
-            statusEl.className = "error";
+        // на случай если даты в логах отличаются — берём самую свежую
+        if (log.date > eventsMap[log.event_id].date) {
+            eventsMap[log.event_id].date = log.date;
         }
     });
 
-    loadItems();
+    // превращаем в массив и сортируем:
+    // самые близкие к сегодняшней дате — сверху
+    const sortedEvents = Object.entries(eventsMap)
+        .map(([eventId, data]) => ({
+            eventId,
+            date: data.date,
+            logs: data.logs
+        }))
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    renderEvents(sortedEvents);
+}
+
+/* ===== render ===== */
+
+function renderEvents(events) {
+    eventsList.innerHTML = "";
+
+    events.forEach(event => {
+        const eventDiv = document.createElement("div");
+        eventDiv.className = "event";
+
+        const header = document.createElement("div");
+        header.className = "event-header";
+
+        const formattedDate = event.date
+            ? new Date(event.date).toLocaleDateString("ru-RU")
+            : "—";
+
+        header.innerHTML = `
+            <b>Event ${event.eventId} <span class="muted">(${formattedDate})</span></b>
+            <button>🗑 удалить event</button>
+        `;
+
+        header.querySelector("button").onclick = () => deleteEvent(event.eventId);
+        eventDiv.appendChild(header);
+
+        const logsDiv = document.createElement("div");
+        logsDiv.className = "event-logs";
+
+        // сортировка логов внутри event (на всякий случай)
+        event.logs
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .forEach(log => {
+                const itemName = itemsById[log.item_id] || `item #${log.item_id}`;
+
+                const row = document.createElement("div");
+                row.className = "log-row";
+                row.innerHTML = `
+                    <span>${itemName}</span>
+                    <button>❌</button>
+                `;
+
+                row.querySelector("button").onclick = () => deleteLog(log.id);
+                logsDiv.appendChild(row);
+            });
+
+        eventDiv.appendChild(logsDiv);
+        eventsList.appendChild(eventDiv);
+    });
+}
+
+/* ===== delete ===== */
+
+async function deleteEvent(eventId) {
+    if (!confirm(`Удалить event ${eventId}?`)) return;
+    await fetch(`/wear_log/${eventId}`, { method: "DELETE" });
+    loadEvents();
+}
+
+async function deleteLog(id) {
+    if (!confirm("Удалить эту запись?")) return;
+    await fetch(`/wear_log/${id}`, { method: "DELETE" });
+    loadEvents();
+}
+
+/* ===== init ===== */
+
+(async () => {
+    await loadItems();
+    await loadEvents();
+})();
 </script>
 
 </body>

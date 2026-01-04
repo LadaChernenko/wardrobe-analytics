@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Wear Event</title>
+
+<style>
+body {
+    font-family: sans-serif;
+    margin: 20px;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+/* ===== LEFT ===== */
+
+.left {
+    border-right: 2px solid #ddd;
+    padding-right: 20px;
+}
+
+.categories {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.categories button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #f5f5f5;
+    cursor: pointer;
+}
+
+.categories button.active {
+    background: #4caf50;
+    color: white;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.item {
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 6px;
+    text-align: center;
+    cursor: pointer;
+    background: #fafafa;
+}
+
+.item.selected {
+    border-color: #4caf50;
+    background: #e8f5e9;
+}
+
+.item img {
+    max-width: 100px;
+    max-height: 140px;
+    object-fit: contain;
+}
+
+/* ===== RIGHT ===== */
+
+.right {
+    padding-left: 10px;
+}
+
+.event-box {
+    border: 2px solid #aaa;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.event-items,
+.saved-event-items {
+    margin-top: 10px;
+}
+
+.event-item,
+.saved-event-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+button {
+    cursor: pointer;
+}
+
+.success { color: green; }
+.error { color: red; }
+.muted { color: #777; font-size: 13px; }
+
+hr {
+    margin: 15px 0;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Wear Event</h2>
+
+<div class="container">
+
+<!-- ===== LEFT ===== -->
+<div class="left">
+    <h3>Гардероб</h3>
+    <div id="categories" class="categories"></div>
+    <div id="itemsGrid" class="grid"></div>
+</div>
+
+<!-- ===== RIGHT ===== -->
+<div class="right">
+    <div class="event-box">
+        <h3>Текущий выход</h3>
+
+        <p>
+            Event: <b id="eventLabel"></b><br>
+            <button id="goToLogsBtn">📜 Перейти к логам</button>
+        </p>
+
+        <input type="date" id="eventDate">
+
+        <div class="event-items" id="eventItems"></div>
+
+        <textarea id="notes" placeholder="Заметка" style="width:100%"></textarea>
+
+        <button id="saveBtn">💾 Сохранить выход</button>
+        <p id="status"></p>
+
+        <hr>
+
+        <h4>Только что сохранённый выход</h4>
+        <div id="savedEvent" class="muted">Пока нет данных</div>
+    </div>
+</div>
+
+</div>
+
+<script>
+const grid = document.getElementById("itemsGrid");
+const categoriesDiv = document.getElementById("categories");
+const eventItemsDiv = document.getElementById("eventItems");
+const statusEl = document.getElementById("status");
+const savedEventDiv = document.getElementById("savedEvent");
+
+let itemsByCategory = {};
+let itemsById = {};
+let selectedItemIds = new Set();
+let currentCategory = null;
+let currentEventId = Math.floor(Date.now() / 1000);
+
+document.getElementById("eventLabel").textContent = currentEventId;
+
+/* ===== NAV ===== */
+
+document.getElementById("goToLogsBtn").onclick = () => {
+    window.location.href = "/static/add_wear_log.html";
+};
+
+/* ===== LOAD ITEMS ===== */
+
+async function loadItems() {
+    const res = await fetch("/items/");
+    const items = await res.json();
+
+    itemsByCategory = {};
+    itemsById = {};
+
+    items.forEach(item => {
+        itemsById[item.id] = item.item;
+
+        const cat = item.category || "Other";
+        if (!itemsByCategory[cat]) itemsByCategory[cat] = [];
+        itemsByCategory[cat].push(item);
+    });
+
+    renderCategories();
+}
+
+/* ===== CATEGORIES ===== */
+
+function renderCategories() {
+    categoriesDiv.innerHTML = "";
+
+    Object.keys(itemsByCategory).forEach((cat, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = cat;
+
+        if (!currentCategory && idx === 0) currentCategory = cat;
+        if (cat === currentCategory) btn.classList.add("active");
+
+        btn.onclick = () => {
+            currentCategory = cat;
+            renderCategories();
+            renderItems();
+        };
+
+        categoriesDiv.appendChild(btn);
+    });
+
+    renderItems();
+}
+
+/* ===== ITEMS GRID ===== */
+
+function renderItems() {
+    grid.innerHTML = "";
+
+    itemsByCategory[currentCategory].forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+        if (selectedItemIds.has(item.id)) div.classList.add("selected");
+
+        if (item.save_path && item.category) {
+            const img = document.createElement("img");
+            const base = item.save_path.split(".").slice(0, -1).join(".");
+            img.src = `/segmented/${item.category}/${base}_${item.category}.png`;
+            div.appendChild(img);
+        }
+
+        div.append(item.item);
+
+        div.onclick = () => toggleItem(item.id);
+        grid.appendChild(div);
+    });
+
+    renderEventItems();
+}
+
+/* ===== EVENT SIDE ===== */
+
+function toggleItem(id) {
+    selectedItemIds.has(id)
+        ? selectedItemIds.delete(id)
+        : selectedItemIds.add(id);
+
+    renderItems();
+}
+
+function renderEventItems() {
+    eventItemsDiv.innerHTML = "";
+
+    selectedItemIds.forEach(id => {
+        const row = document.createElement("div");
+        row.className = "event-item";
+        row.innerHTML = `
+            <span>${itemsById[id]}</span>
+            <button>❌</button>
+        `;
+        row.querySelector("button").onclick = () => {
+            selectedItemIds.delete(id);
+            renderItems();
+        };
+        eventItemsDiv.appendChild(row);
+    });
+}
+
+/* ===== SAVE ===== */
+
+document.getElementById("saveBtn").onclick = async () => {
+    const date = document.getElementById("eventDate").value;
+    const notes = document.getElementById("notes").value || null;
+
+    if (!date || selectedItemIds.size === 0) {
+        statusEl.textContent = "Выберите дату и items";
+        statusEl.className = "error";
+        return;
+    }
+
+    const savedItems = [];
+
+    for (const itemId of selectedItemIds) {
+        await fetch("/wear_log/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                item_id: itemId,
+                event_id: currentEventId,
+                date,
+                notes
+            })
+        });
+
+        savedItems.push(itemsById[itemId]);
+    }
+
+    const formattedDate = new Date(date).toLocaleDateString("ru-RU");
+
+    savedEventDiv.innerHTML = `
+        <b>Event ${currentEventId}</b>
+        <div class="muted">${formattedDate}</div>
+        <div class="saved-event-items">
+            ${savedItems.map(name => `<div class="saved-event-item">• ${name}</div>`).join("")}
+        </div>
+    `;
+
+    statusEl.textContent = "✔ Выход сохранён";
+    statusEl.className = "success";
+};
+
+/* ===== INIT ===== */
+
+loadItems();
+</script>
+
+</body>
+</html>
