@@ -10,56 +10,66 @@
             margin: 40px;
         }
 
-        h2 {
-            margin-bottom: 10px;
-        }
-
         button {
             padding: 6px 10px;
             cursor: pointer;
+        }
+
+        select, input {
+            padding: 6px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            font-size: 14px;
         }
 
         th, td {
             padding: 8px;
             border-bottom: 1px solid #ddd;
             text-align: left;
+            vertical-align: top;
         }
 
         th {
             background: #f4f4f4;
+            white-space: nowrap;
         }
 
         .actions button {
             margin-right: 5px;
         }
 
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
         /* ---------- MODAL ---------- */
 
         .modal {
-            display: none;
+            display: none;               /* ← ТОЛЬКО none */
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.4);
-
-            display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .modal.open {
+            display: flex;               /* ← открываем ТОЛЬКО классом */
         }
 
         .modal-content {
             background: white;
             width: 100%;
             max-width: 420px;
-
             max-height: 90vh;
             overflow-y: auto;
-
             padding: 20px;
         }
 
@@ -69,21 +79,10 @@
             gap: 10px;
         }
 
-        input, select {
-            padding: 8px;
-            font-size: 14px;
-        }
-
         img {
             max-width: 100%;
             margin-top: 8px;
             display: none;
-        }
-
-        .modal-footer {
-            margin-top: 10px;
-            display: flex;
-            justify-content: space-between;
         }
 
         body.modal-open {
@@ -96,42 +95,73 @@
 <h2>Мой гардероб</h2>
 <button onclick="openCreate()">➕ Добавить предмет</button>
 
+<div class="controls">
+    <select id="filterCategory">
+        <option value="">Все категории</option>
+        <option value="skirt">Юбка</option>
+        <option value="upper_clothes">Верхняя одежда</option>
+        <option value="tops">Верх</option>
+        <option value="pants">Брюки</option>
+        <option value="dress">Платье</option>
+        <option value="bag">Сумка</option>
+        <option value="hat">Головной убор</option>
+        <option value="shoes">Обувь</option>
+        <option value="sunglasses">Солнцезащитные очки</option>
+        <option value="belt">Ремень</option>
+        <option value="scarf">Шарф</option>
+    </select>
+
+    <select id="sortMode">
+        <option value="">Без сортировки</option>
+        <option value="cost_per_use_desc">Cost / use ↓</option>
+        <option value="cost_per_use_asc">Cost / use ↑</option>
+    </select>
+
+    <label>
+        <input type="checkbox" id="groupByCategory">
+        Группировать по категориям
+    </label>
+</div>
+
 <table>
     <thead>
-        <tr>
-            <th>Название</th>
-            <th>Категория</th>
-            <th>Сезон</th>
-            <th>Cost / use</th>
-            <th></th>
-        </tr>
+    <tr>
+        <th>Название</th>
+        <th>Бренд</th>
+        <th>Категория</th>
+        <th>Сезон</th>
+        <th>Год</th>
+        <th>Стиль</th>
+        <th>Цвет</th>
+        <th>Стоимость</th>
+        <th>Использований</th>
+        <th>Cost / use</th>
+        <th></th>
+    </tr>
     </thead>
     <tbody id="itemsTable"></tbody>
 </table>
 
-<!-- ================= MODAL ================= -->
+<!-- MODAL -->
 
 <div class="modal" id="itemModal">
     <div class="modal-content">
         <h3 id="modalTitle"></h3>
 
         <form id="itemForm" enctype="multipart/form-data">
-
             <input name="item" placeholder="Название" required>
             <input name="brand" placeholder="Бренд">
 
             <select name="category" required>
                 <option value="" disabled selected>Категория</option>
-                <option value="Skirt">Юбка</option>
-                <option value="Upper-clothes">Верхняя одежда</option>
-                <option value="Pants">Брюки</option>
-                <option value="Dress">Платье</option>
-                <option value="Bag">Сумка</option>
-                <option value="Hat">Головной убор</option>
-                <option value="Shoes">Обувь</option>
-                <option value="Sunglasses">Очки</option>
-                <option value="Belt">Ремень</option>
-                <option value="Scarf">Шарф</option>
+                <option value="skirt">Юбка</option>
+                <option value="upper_clothes">Верхняя одежда</option>
+                <option value="tops">Верх</option>
+                <option value="pants">Брюки</option>
+                <option value="dress">Платье</option>
+                <option value="bag">Сумка</option>
+                <option value="hat">Головной убор</option>
+                <option value="shoes">Обувь</option>
             </select>
 
             <select name="season" required>
@@ -143,9 +173,7 @@
 
             <input name="year_of_buying" type="number" placeholder="Год покупки" required>
             <input name="style" placeholder="Стиль" required>
-            <input name="damage" placeholder="Повреждения">
-            <input name="extra_colour" placeholder="Доп. цвет">
-            <input name="colour" placeholder="Основной цвет">
+            <input name="colour" placeholder="Цвет">
 
             <input name="cost" type="number" placeholder="Стоимость" required>
             <input name="use" type="number" placeholder="Использований" required>
@@ -153,118 +181,14 @@
             <input type="file" name="image" accept="image/*">
             <img id="preview">
 
-            <div class="modal-footer">
+            <div style="display:flex; justify-content:space-between;">
                 <button type="submit">💾 Сохранить</button>
                 <button type="button" onclick="closeModal()">Отмена</button>
             </div>
-
         </form>
     </div>
 </div>
 
-<!-- ================= SCRIPT ================= -->
-
-<script>
-    const table = document.getElementById("itemsTable");
-    const modal = document.getElementById("itemModal");
-    const form = document.getElementById("itemForm");
-    const title = document.getElementById("modalTitle");
-    const preview = document.getElementById("preview");
-    const imageInput = form.querySelector('input[name="image"]');
-
-    let currentItemId = null;
-
-    imageInput.addEventListener("change", () => {
-        const file = imageInput.files[0];
-        if (!file) {
-            preview.style.display = "none";
-            return;
-        }
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = "block";
-    });
-
-    async function loadItems() {
-        const res = await fetch("/items/");
-        const items = await res.json();
-
-        table.innerHTML = "";
-
-        for (const i of items) {
-            table.innerHTML += `
-                <tr>
-                    <td>${i.item}</td>
-                    <td>${i.category}</td>
-                    <td>${i.season}</td>
-                    <td>${i.cost_per_use}</td>
-                    <td class="actions">
-                        <button onclick='openEdit(${JSON.stringify(i)})'>✏️</button>
-                        <button onclick='deleteItem(${i.id})'>🗑</button>
-                    </td>
-                </tr>
-            `;
-        }
-    }
-
-    function openCreate() {
-        currentItemId = null;
-        title.textContent = "Добавить предмет";
-        form.reset();
-        preview.style.display = "none";
-        modal.style.display = "block";
-    }
-
-    function openEdit(item) {
-        currentItemId = item.id;
-        title.textContent = "Редактировать предмет";
-
-        for (const key in item) {
-            if (form[key]) {
-                form[key].value = item[key] ?? "";
-            }
-        }
-
-        preview.style.display = "none";
-        modal.style.display = "block";
-    }
-
-    function closeModal() {
-        modal.style.display = "none";
-    }
-
-    async function deleteItem(id) {
-        if (!confirm("Удалить предмет?")) return;
-        await fetch(`/items/${id}`, { method: "DELETE" });
-        loadItems();
-    }
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const method = currentItemId ? "PATCH" : "POST";
-        const url = currentItemId ? `/items/${currentItemId}` : "/items/";
-
-        const res = await fetch(url, {
-            method,
-            body: new FormData(form)
-        });
-
-        if (res.ok) {
-            closeModal();
-            loadItems();
-        } else {
-            alert("Ошибка сохранения");
-        }
-    });
-
-    modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
-
-    loadItems();
-</script>
-
+<script src="/static/items.js"></script>
 </body>
 </html>

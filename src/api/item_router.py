@@ -8,6 +8,7 @@ from fastapi import (
 import uuid
 from pathlib import Path
 from sqlalchemy.orm import Session
+from enum import Enum as PyEnum
 
 from core.database import get_sync_session
 from core.settings import settings
@@ -109,6 +110,7 @@ def get_item(item_id: int):
     """Получить один предмет"""
     with get_sync_session() as session:
         item = session.query(Item).filter(Item.id == item_id).first()
+        logger.debud(f'Item image_path: {Item.image_path}')
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
         return item
@@ -148,7 +150,7 @@ def update_item(
             "use": use,
         }.items():
             if value is not None:
-                setattr(item_obj, field, value)
+                    setattr(item_obj, field, value)
 
         if cost is not None or use is not None:
             current_cost = cost if cost is not None else item_obj.cost
@@ -159,7 +161,7 @@ def update_item(
                 else float(current_cost)
             )
 
-        if image:
+        if image and image.filename:
 
             if item_obj.image_path:
                 old_path = UPLOAD_DIR / item_obj.image_path
@@ -180,7 +182,7 @@ def update_item(
                     output_path=SEGMENT_DIR,
                 )
 
-                item_obj.image_path = filename
+                item_obj.image_path = str(filename)
                 logger.info(f"Item {item_id} image updated")
 
             except Exception as e:

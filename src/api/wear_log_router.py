@@ -117,3 +117,70 @@ def delete_log(id: int):
         logger.info(
             f"WearLog id={id} deleted, item_id={item.id if item else 'unknown'}"
         )
+
+@router.post("/{event_id}/items", response_model=list[WearLogRead])
+def add_items_to_event(
+    event_id: int,
+    item_ids: list[int],
+    notes: str | None = None,
+):
+    """
+    Добавить items в существующий event.
+    Уже существующие item в event — игнорируются.
+    """
+
+
+    with get_sync_session() as session:
+        # проверяем, что event вообще существует
+        existing_logs = (
+            session
+            .query(WearLog)
+            .filter(WearLog.event_id == event_id)
+            .all()
+        )
+
+        if not existing_logs:
+            raise HTTPException(status_code=404, detail="Event not found")
+
+        event_date = existing_logs[0].date
+        assert existing_logs[0].date is not None, "Event date must exist"
+
+        existing_item_ids = {log.item_id for log in existing_logs}
+        created_logs: list[WearLog] = []
+
+        for item_id in item_ids:
+            if item_id in existing_item_ids:
+                continue
+
+            item = session.get(Item, item_id)
+            if not item:
+                logger.warning(
+                    f"Skipped adding item_id={item_id} to event_id={event_id}: item not found"
+                )
+                continue
+
+            wear = WearLog(
+                item_id=item_id,
+                event_id=event_id,
+                date=event_date,
+                notes=notes,
+            )
+
+            session.add(wear)
+
+            item.use += 1
+            item.cost_per_use = round(item.cost / item.use, 2)
+
+            created_logs.append(wear)
+
+        session.commit()
+
+        for wear in created_logs:
+            session.refresh(wear)
+
+        logger.info(
+            f"Added {len(created_logs)} items to event_id={event_id}, "
+            f"item_ids={[w.item_id for w in created_logs]}"
+        )
+
+        return created_logs

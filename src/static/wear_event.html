@@ -43,6 +43,40 @@ body {
     color: white;
 }
 
+/* ===== GROUPING CONTROLS ===== */
+
+.grouping {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.grouping button {
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fafafa;
+    font-size: 13px;
+}
+
+.grouping button.active {
+    background: #2196f3;
+    color: white;
+}
+
+/* ===== GROUPS ===== */
+
+.group {
+    margin-bottom: 28px; /* увеличенный отступ между группами */
+}
+
+.group-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #444;
+}
+
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -81,17 +115,31 @@ body {
     padding: 15px;
 }
 
-.event-items,
-.saved-event-items {
-    margin-top: 10px;
-}
-
-.event-item,
-.saved-event-item {
+.event-item {
     display: flex;
     justify-content: space-between;
     margin-bottom: 6px;
 }
+
+/* ===== COLLAGE ===== */
+
+.collage {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 6px;
+}
+
+.collage img {
+    width: 100%;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+}
+
+/* ===== MISC ===== */
 
 button {
     cursor: pointer;
@@ -116,8 +164,16 @@ hr {
 <!-- ===== LEFT ===== -->
 <div class="left">
     <h3>Гардероб</h3>
+
     <div id="categories" class="categories"></div>
-    <div id="itemsGrid" class="grid"></div>
+
+    <div class="grouping">
+        <button data-mode="none" class="active">Без групп</button>
+        <button data-mode="season">По сезону</button>
+        <button data-mode="style">По стилю</button>
+    </div>
+
+    <div id="itemsGrid"></div>
 </div>
 
 <!-- ===== RIGHT ===== -->
@@ -132,9 +188,11 @@ hr {
 
         <input type="date" id="eventDate">
 
-        <div class="event-items" id="eventItems"></div>
+        <div id="eventItems"></div>
 
-        <textarea id="notes" placeholder="Заметка" style="width:100%"></textarea>
+        <div id="collage" class="collage"></div>
+
+        <textarea id="notes" placeholder="Заметка" style="width:100%; margin-top:10px"></textarea>
 
         <button id="saveBtn">💾 Сохранить выход</button>
         <p id="status"></p>
@@ -149,9 +207,10 @@ hr {
 </div>
 
 <script>
-const grid = document.getElementById("itemsGrid");
+const gridRoot = document.getElementById("itemsGrid");
 const categoriesDiv = document.getElementById("categories");
 const eventItemsDiv = document.getElementById("eventItems");
+const collageDiv = document.getElementById("collage");
 const statusEl = document.getElementById("status");
 const savedEventDiv = document.getElementById("savedEvent");
 
@@ -159,6 +218,7 @@ let itemsByCategory = {};
 let itemsById = {};
 let selectedItemIds = new Set();
 let currentCategory = null;
+let groupingMode = "none";
 let currentEventId = Math.floor(Date.now() / 1000);
 
 document.getElementById("eventLabel").textContent = currentEventId;
@@ -168,6 +228,18 @@ document.getElementById("eventLabel").textContent = currentEventId;
 document.getElementById("goToLogsBtn").onclick = () => {
     window.location.href = "/static/add_wear_log.html";
 };
+
+/* ===== GROUPING BUTTONS ===== */
+
+document.querySelectorAll(".grouping button").forEach(btn => {
+    btn.onclick = () => {
+        groupingMode = btn.dataset.mode;
+        document.querySelectorAll(".grouping button")
+            .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderItems();
+    };
+});
 
 /* ===== LOAD ITEMS ===== */
 
@@ -179,8 +251,7 @@ async function loadItems() {
     itemsById = {};
 
     items.forEach(item => {
-        itemsById[item.id] = item.item;
-
+        itemsById[item.id] = item;
         const cat = item.category || "Other";
         if (!itemsByCategory[cat]) itemsByCategory[cat] = [];
         itemsByCategory[cat].push(item);
@@ -213,30 +284,64 @@ function renderCategories() {
     renderItems();
 }
 
-/* ===== ITEMS GRID ===== */
+/* ===== ITEMS ===== */
 
 function renderItems() {
-    grid.innerHTML = "";
+    gridRoot.innerHTML = "";
+    const items = itemsByCategory[currentCategory] || [];
 
-    itemsByCategory[currentCategory].forEach(item => {
+    if (groupingMode === "none") {
+        const grid = createGrid(items);
+        gridRoot.appendChild(grid);
+    } else {
+        const groups = {};
+
+        items.forEach(item => {
+            const key = item[groupingMode] || "Other";
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(item);
+        });
+
+        Object.keys(groups).sort().forEach(groupName => {
+            const section = document.createElement("div");
+            section.className = "group";
+
+            const title = document.createElement("div");
+            title.className = "group-title";
+            title.textContent = groupName;
+
+            section.appendChild(title);
+            section.appendChild(createGrid(groups[groupName]));
+            gridRoot.appendChild(section);
+        });
+    }
+
+    renderEventItems();
+    renderCollage();
+}
+
+function createGrid(items) {
+    const grid = document.createElement("div");
+    grid.className = "grid";
+
+    items.forEach(item => {
         const div = document.createElement("div");
         div.className = "item";
         if (selectedItemIds.has(item.id)) div.classList.add("selected");
 
-        if (item.save_path && item.category) {
+        if (item.image_path && item.category) {
             const img = document.createElement("img");
-            const base = item.save_path.split(".").slice(0, -1).join(".");
-            img.src = `/segmented/${item.category}/${base}_${item.category}.png`;
+            const file = item.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
+            img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
             div.appendChild(img);
         }
 
         div.append(item.item);
-
         div.onclick = () => toggleItem(item.id);
         grid.appendChild(div);
     });
 
-    renderEventItems();
+    return grid;
 }
 
 /* ===== EVENT SIDE ===== */
@@ -256,7 +361,7 @@ function renderEventItems() {
         const row = document.createElement("div");
         row.className = "event-item";
         row.innerHTML = `
-            <span>${itemsById[id]}</span>
+            <span>${itemsById[id].item}</span>
             <button>❌</button>
         `;
         row.querySelector("button").onclick = () => {
@@ -264,6 +369,22 @@ function renderEventItems() {
             renderItems();
         };
         eventItemsDiv.appendChild(row);
+    });
+}
+
+/* ===== COLLAGE ===== */
+
+function renderCollage() {
+    collageDiv.innerHTML = "";
+
+    selectedItemIds.forEach(id => {
+        const item = itemsById[id];
+        if (!item.image_path) return;
+
+        const img = document.createElement("img");
+        const file = item.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
+        img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
+        collageDiv.appendChild(img);
     });
 }
 
@@ -292,18 +413,12 @@ document.getElementById("saveBtn").onclick = async () => {
                 notes
             })
         });
-
-        savedItems.push(itemsById[itemId]);
+        savedItems.push(itemsById[itemId].item);
     }
-
-    const formattedDate = new Date(date).toLocaleDateString("ru-RU");
 
     savedEventDiv.innerHTML = `
         <b>Event ${currentEventId}</b>
-        <div class="muted">${formattedDate}</div>
-        <div class="saved-event-items">
-            ${savedItems.map(name => `<div class="saved-event-item">• ${name}</div>`).join("")}
-        </div>
+        ${savedItems.map(i => `<div>• ${i}</div>`).join("")}
     `;
 
     statusEl.textContent = "✔ Выход сохранён";
