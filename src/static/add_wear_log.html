@@ -5,85 +5,127 @@
 <title>Wear Log</title>
 
 <style>
+:root {
+    --bg: #f5f6f8;
+    --card-bg: #ffffff;
+    --text-main: #1f2933;
+    --text-secondary: #6b7280;
+    --accent: #7c3aed;
+    --accent-hover: #6d28d9;
+    --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    --radius: 18px;
+}
+
 body {
-    font-family: sans-serif;
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+}
+
+/* ===== PAGE HEADER ===== */
+
+h2 {
+    margin: 0;
+    padding: 32px;
+    font-size: 32px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 0 32px 24px;
+}
+
+/* ===== MAIN LIST ===== */
+
+#eventsList {
     max-width: 1200px;
-    margin: 30px auto;
+    margin: auto;
+    padding: 0 32px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
-h2, h3 {
-    margin-bottom: 10px;
-}
-
-button { cursor: pointer; }
-
-.muted {
-    color: #888;
-    font-size: 13px;
-}
-
-/* ===== EVENT LAYOUT ===== */
+/* ===== EVENT CARD ===== */
 
 .event {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 16px;
-}
-
-.event-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 15px;
-    margin-top: 8px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 24px;
 }
 
 .event-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 12px;
 }
+
+.event-header b {
+    font-size: 16px;
+}
+
+.muted {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* ===== ACTION BUTTONS ===== */
 
 .event-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
-/* ===== LEFT ===== */
+.event-actions button {
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 10px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    color: var(--text-main);
+}
+
+.event-actions button:hover {
+    background: #f3f4f6;
+}
+
+/* ===== GRID ===== */
+
+.event-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+/* ===== LEFT: LOGS ===== */
 
 .event-logs {
-    margin-top: 8px;
-    margin-left: 10px;
+    margin-left: 6px;
 }
 
 .log-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 4px;
+    align-items: center;
+    font-size: 14px;
+    padding: 4px 0;
 }
 
-/* ===== COLLAGE ===== */
-
-.collage {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 6px;
-}
-
-.collage img {
-    width: 100%;
-    height: 90px;
-    object-fit: contain;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    background: #fafafa;
+.log-row button {
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
 /* ===== ADD ITEMS ===== */
 
 .add-items {
-    margin-top: 10px;
-    padding-top: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
     border-top: 1px dashed #ddd;
     display: none;
 }
@@ -91,15 +133,57 @@ button { cursor: pointer; }
 .items-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 4px 10px;
-    margin-bottom: 8px;
+    gap: 6px 12px;
+    margin-bottom: 10px;
 }
+
+.items-list label {
+    font-size: 13px;
+    color: var(--text-main);
+}
+
+/* ===== PRIMARY BUTTON ===== */
+
+.add-items button {
+    padding: 8px 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.add-items button:hover {
+    background: var(--accent-hover);
+}
+
+/* ===== RIGHT: COLLAGE ===== */
+
+.collage {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+}
+
+.collage img {
+    width: 100%;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #fafafa;
+}
+
 </style>
 </head>
 
 <body>
 
-<h2>История выходов</h2>
+<!-- <h2></h2> -->
+<header>
+    <h1>История выходов</h1>
+    <a class="back-btn" href="index.html">← На главную</a>
+</header>
 <hr>
 
 <div id="eventsList"></div>
@@ -249,7 +333,8 @@ function renderEvents(events) {
                 body: JSON.stringify(ids)
             });
 
-            loadEvents();
+            await loadEvents();
+            return;
         };
 
         addPanel.appendChild(list);

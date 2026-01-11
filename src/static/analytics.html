@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Аналитика гардероба</title>
+
+    <style>
+        :root {
+            --bg: #f5f6f8;
+            --card-bg: #ffffff;
+            --text-main: #1f2933;
+            --text-secondary: #6b7280;
+            --accent: #7c3aed;
+            --accent-hover: #6d28d9;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --radius: 18px;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 32px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .back-btn {
+            padding: 10px 16px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .container {
+            padding: 0 32px 48px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            padding: 6px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        input {
+            margin-left: 6px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            width: 100px;
+        }
+
+        button {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 6px;
+            background: #fee2e2;
+            color: #991b1b;
+            margin-left: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Аналитика гардероба</h1>
+    <a class="back-btn" href="index.html">← На главную</a>
+</header>
+
+<div class="container">
+    <div class="grid">
+
+        <div class="card">
+            <h2>Топ-10 носимых вещей</h2>
+            <ul id="top-items"></ul>
+        </div>
+
+        <div class="card">
+            <h2>Cost per use</h2>
+            <div class="stat" id="avg-cpu">—</div>
+            <div class="stat-label">Средняя</div>
+            <br>
+            <div class="stat" id="median-cpu">—</div>
+            <div class="stat-label">Медианная</div>
+        </div>
+
+        <div class="card">
+            <h2>Баланс по категориям</h2>
+            <canvas id="categoryChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>Баланс по сезонам</h2>
+            <canvas id="seasonChart"></canvas>
+        </div>
+        
+        <div class="card">
+            <h2>Самые выгодные вещи</h2>
+            <ul id="best-value"></ul>
+        </div>
+
+        <div class="card">
+            <h2>Дорогие ошибки</h2>
+
+            <label>
+                Мин. стоимость:
+                <input type="number" id="min-cost" value="10000">
+            </label>
+            <br>
+            <label>
+                Макс. выходов:
+                <input type="number" id="max-usage" value="3">
+            </label>
+            <br>
+
+            <button onclick="loadMistakes()">Применить</button>
+
+            <ul id="mistakes"></ul>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+async function loadBaseAnalytics() {
+    const topItems = await fetch('/analytics/top-items').then(r => r.json());
+    document.getElementById('top-items').innerHTML =
+        topItems.map(i => `<li>${i.item} — ${i.usage_count} выходов</li>`).join('');
+
+    const cost = await fetch('/analytics/cost-stats').then(r => r.json());
+    document.getElementById('avg-cpu').textContent =
+        cost.avg_cpu !== null ? cost.avg_cpu.toFixed(2) : '—';
+    document.getElementById('median-cpu').textContent =
+        cost.median_cpu !== null ? cost.median_cpu.toFixed(2) : '—';
+
+    const balance = await fetch('/analytics/distribution').then(r => r.json());
+
+    renderPieChart('categoryChart', balance.by_category, 'По категориям');
+    renderPieChart('seasonChart', balance.by_season, 'По сезонам');
+
+    const best = await fetch('/analytics/best-value').then(r => r.json());
+    document.getElementById('best-value').innerHTML =
+        best.map(i => `<li>${i.item} — ${i.cost_per_use}</li>`).join('');
+}
+
+async function loadMistakes() {
+    const minCost = document.getElementById('min-cost').value;
+    const maxUsage = document.getElementById('max-usage').value;
+
+    const url = `/analytics/expensive-mistakes?min_cost=${minCost}&max_usage=${maxUsage}`;
+    const mistakes = await fetch(url).then(r => r.json());
+
+    document.getElementById('mistakes').innerHTML =
+        mistakes.map(i =>
+            `<li>
+                ${i.item} — ${i.cost} ₽ (${i.usage} выходов)
+                ${i.badge ? `<span class="badge">импульсивная?</span>` : ''}
+            </li>`
+        ).join('');
+}
+
+loadBaseAnalytics();
+loadMistakes();
+
+</script>
+<script>
+function renderPieChart(canvasId, data, title) {
+    const ctx = document.getElementById(canvasId);
+    const sorted = [...data].sort(
+        (a, b) => b.items_count - a.items_count
+    );
+
+    const labels = sorted.map(d => d.key);
+    const values = sorted.map(d => d.items_count);
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    '#7c3aed',
+                    '#60a5fa',
+                    '#34d399',
+                    '#fbbf24',
+                    '#f87171',
+                    '#a78bfa',
+                    '#fb7185'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: false,
+                    text: title
+                }
+            }
+        }
+    });
+}
+</script>
+
+</body>
+</html>

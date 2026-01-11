@@ -35,22 +35,14 @@ wardrobe_api/
 sudo docker compose -f ./docker/docker-compose.yml up --build --detach
 ```
 
+web страница сервиса: `http://localhost:3000/static/index.html`
+
 Как добавить в БД данные из готовой таблицы: 
 ```bash
 sudo docker exec -it wardrobe_main_api_backend python src/scripts/load_items_from_csv.py
 ```
 
-как посмотреть что там в таблице: 
+посмотреть логи: 
 ```bash
-sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM items ORDER BY id DESC LIMIT 10 ;" 
-
-sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM wear_log ORDER BY id DESC LIMIT 10 ;" 
-
-sudo docker exec -it wardrobe_main_api-postgres-1 psql -U wardrobe -d wardrobe_db -c "SELECT * FROM items WHERE category ='pants' ORDER BY id DESC LIMIT 10;"
-```
-## TODO:
-
-```bash
-sudo docker exec -it wardrobe_main_api_backend bash
-alembic -c alembic/alembic.ini revision --autogenerate -m "add event_id to wear_log"
+sudo docker logs -f wardrobe_main_api_backend
 ```

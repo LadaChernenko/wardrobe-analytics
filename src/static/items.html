@@ -3,96 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Гардероб</title>
-
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 40px;
-        }
-
-        button {
-            padding: 6px 10px;
-            cursor: pointer;
-        }
-
-        select, input {
-            padding: 6px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-
-        th, td {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        th {
-            background: #f4f4f4;
-            white-space: nowrap;
-        }
-
-        .actions button {
-            margin-right: 5px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin: 15px 0;
-        }
-
-        /* ---------- MODAL ---------- */
-
-        .modal {
-            display: none;               /* ← ТОЛЬКО none */
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.open {
-            display: flex;               /* ← открываем ТОЛЬКО классом */
-        }
-
-        .modal-content {
-            background: white;
-            width: 100%;
-            max-width: 420px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        img {
-            max-width: 100%;
-            margin-top: 8px;
-            display: none;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/base.css">
 </head>
 <body>
 
-<h2>Мой гардероб</h2>
+<!-- <h2>Мой гардероб</h2> -->
+<header>
+    <h1>Мой гардероб</h1>
+    <a class="back-btn" href="index.html">← На главную</a>
+</header>
 <button onclick="openCreate()">➕ Добавить предмет</button>
 
 <div class="controls">

@@ -9,6 +9,7 @@ from models.item import Item
 from models.wear_log import WearLog
 from api.wear_log_router import router as wear_log_router
 from api.item_router import router as item_router
+from api.analytics_router import router as analytics_router
 from core.settings import settings
 from core.logger import logger
 
@@ -39,6 +40,7 @@ def on_startup():
 # Подключаем роутер
 app.include_router(wear_log_router)
 app.include_router(item_router)
+app.include_router(analytics_router)
 
 
 @app.get("/")
