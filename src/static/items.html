@@ -4,17 +4,186 @@
     <meta charset="UTF-8">
     <title>Гардероб</title>
     <link rel="stylesheet" href="/static/base.css">
+
+    <style>
+        /* ===== VIEW SWITCH ===== */
+        .view-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .view-switch button {
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: #fafafa;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .view-switch button.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 32px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .back-btn {
+            padding: 10px 16px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-hover);
+        }
+        /* ===== GALLERY ===== */
+
+        .group {
+            margin-bottom: 28px;
+        }
+
+        .group-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .item-card {
+            background: #fafafa;
+            border-radius: 14px;
+            padding: 8px;
+            position: relative;
+            border: 2px solid transparent;
+
+            display: flex;
+            flex-direction: column;
+            height: 220px; 
+        }
+        .item-image {
+            flex: 1;                      
+            display: flex;
+            align-items: center;          
+            justify-content: center;      
+        }
+
+        .item-image img {
+            max-width: 120px;
+            max-height: 160px;
+            object-fit: contain;
+        }
+
+        .item-name {
+            font-size: 13px;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .item-actions {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            right: 6px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* ===== TABLE ===== */
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-secondary);
+        }
+
+        td.actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* ===== ICONS ===== */
+
+        .icon-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn img {
+            width: 16px;
+            height: 16px;
+            opacity: 0.75;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+
+        .icon-btn:hover img {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
 
-<!-- <h2>Мой гардероб</h2> -->
 <header>
     <h1>Мой гардероб</h1>
     <a class="back-btn" href="index.html">← На главную</a>
 </header>
+
 <button onclick="openCreate()">➕ Добавить предмет</button>
 
 <div class="controls">
+
+    <div class="view-switch">
+        <button id="viewTableBtn" class="active">Таблица</button>
+        <button id="viewGridBtn">Галерея</button>
+    </div>
+
     <select id="filterCategory">
         <option value="">Все категории</option>
         <option value="skirt">Юбка</option>
@@ -25,24 +194,19 @@
         <option value="bag">Сумка</option>
         <option value="hat">Головной убор</option>
         <option value="shoes">Обувь</option>
-        <option value="sunglasses">Солнцезащитные очки</option>
-        <option value="belt">Ремень</option>
-        <option value="scarf">Шарф</option>
     </select>
 
-    <select id="sortMode">
-        <option value="">Без сортировки</option>
-        <option value="cost_per_use_desc">Cost / use ↓</option>
-        <option value="cost_per_use_asc">Cost / use ↑</option>
+    <select id="groupMode">
+        <option value="none">Без групп</option>
+        <option value="category">По категории</option>
+        <option value="season">По сезону</option>
+        <option value="style">По стилю</option>
     </select>
-
-    <label>
-        <input type="checkbox" id="groupByCategory">
-        Группировать по категориям
-    </label>
 </div>
 
-<table>
+<!-- ===== TABLE VIEW ===== -->
+
+<table id="tableView">
     <thead>
     <tr>
         <th>Название</th>
@@ -51,7 +215,6 @@
         <th>Сезон</th>
         <th>Год</th>
         <th>Стиль</th>
-        <th>Цвет</th>
         <th>Стоимость</th>
         <th>Использований</th>
         <th>Cost / use</th>
@@ -61,7 +224,11 @@
     <tbody id="itemsTable"></tbody>
 </table>
 
-<!-- MODAL -->
+<!-- ===== GRID VIEW ===== -->
+
+<div id="gridView" style="display:none"></div>
+
+<!-- ===== MODAL ===== -->
 
 <div class="modal" id="itemModal">
     <div class="modal-content">
@@ -90,12 +257,11 @@
                 <option value="off_season">Межсезонье</option>
             </select>
 
-            <input name="year_of_buying" type="number" placeholder="Год покупки" required>
-            <input name="style" placeholder="Стиль" required>
+            <input name="year_of_buying" type="number" placeholder="Год покупки">
+            <input name="style" placeholder="Стиль">
             <input name="colour" placeholder="Цвет">
-
-            <input name="cost" type="number" placeholder="Стоимость" required>
-            <input name="use" type="number" placeholder="Использований" required>
+            <input name="cost" type="number" placeholder="Стоимость">
+            <input name="use" type="number" placeholder="Использований">
 
             <input type="file" name="image" accept="image/*">
             <img id="preview">

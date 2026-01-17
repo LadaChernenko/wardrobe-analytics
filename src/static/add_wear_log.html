@@ -24,7 +24,30 @@ body {
 }
 
 /* ===== PAGE HEADER ===== */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32px;
+}
 
+h1 {
+    margin: 0;
+    font-size: 32px;
+}
+
+.back-btn {
+    padding: 10px 16px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.back-btn:hover {
+    background: var(--accent-hover);
+}
 h2 {
     margin: 0;
     padding: 32px;
@@ -93,18 +116,32 @@ hr {
     background: #f3f4f6;
 }
 
+
+/* .event-actions button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+} */
+
+.event-actions img {
+    width: 14px;
+    height: 14px;
+}
+
 /* ===== GRID ===== */
 
 .event-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    /* grid-template-columns: 2fr 1fr; */
     gap: 20px;
 }
 
 /* ===== LEFT: LOGS ===== */
 
 .event-logs {
-    margin-left: 6px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
 }
 
 .log-row {
@@ -120,6 +157,69 @@ hr {
     border: none;
     cursor: pointer;
 }
+
+.log-card {
+    position: relative;
+    background: #fafafa;
+    border-radius: 14px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.log-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.log-image img {
+    max-width: 90px;
+    max-height: 120px;
+    object-fit: contain;
+}
+
+.log-name {
+    font-size: 13px;
+    margin-top: 6px;
+    text-align: center;
+}
+
+.log-del {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+
+    width: 24px;
+    height: 24px;
+
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+}
+.log-del img {
+    width: 14px;
+    height: 14px;
+}
+/* .log-del:hover {
+    background: #fee2e2;
+} */
+.log-del:hover img {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
 
 /* ===== ADD ITEMS ===== */
 
@@ -259,8 +359,15 @@ function renderEvents(events) {
                     <span class="muted">(${formattedDate})</span>
                 </b>
                 <div class="event-actions">
-                    <button class="add-btn">➕ items</button>
-                    <button class="del-btn">🗑 event</button>
+                    <button class="add-btn">
+                        <img src="/static/icons/pencil.png">
+                        items
+                    </button>
+
+                    <button class="del-btn">
+                        <img src="/static/icons/bin.png">
+                        event
+                    </button>
                 </div>
             </div>
         `;
@@ -283,15 +390,32 @@ function renderEvents(events) {
             existingItemIds.add(log.item_id);
             const item = itemsById[log.item_id];
 
-            const row = document.createElement("div");
-            row.className = "log-row";
-            row.innerHTML = `
-                <span>${item?.item || `item #${log.item_id}`}</span>
-                <button>❌</button>
-            `;
+        const row = document.createElement("div");
+        row.className = "log-card";
 
-            row.querySelector("button").onclick =
-                () => deleteLog(log.id);
+        const file = item?.image_path
+            ? item.image_path.split("/").pop().replace(/\.[^/.]+$/, "")
+            : null;
+
+        row.innerHTML = `
+            <div class="log-image">
+                ${
+                    file
+                        ? `<img src="/segmented/${item.category}/${file}_${item.category}.png">`
+                        : ""
+                }
+            </div>
+
+            <div class="log-name">
+                ${item?.item || `item #${log.item_id}`}
+            </div>
+
+            <button class="icon-btn log-del">
+                <img src="/static/icons/bin.png" alt="Удалить">
+            </button>
+        `;
+
+            row.querySelector(".log-del").onclick = () => deleteLog(log.id);
 
             logsDiv.appendChild(row);
         });
@@ -345,31 +469,31 @@ function renderEvents(events) {
             () => addPanel.style.display =
                 addPanel.style.display === "none" ? "block" : "none";
 
-        /* ===== RIGHT (COLLAGE) ===== */
+        // /* ===== RIGHT (COLLAGE) ===== */
 
-        const right = document.createElement("div");
-        const collage = document.createElement("div");
-        collage.className = "collage";
+        // const right = document.createElement("div");
+        // const collage = document.createElement("div");
+        // collage.className = "collage";
 
-        event.logs.forEach(log => {
-            const item = itemsById[log.item_id];
-            if (!item?.image_path) return;
+        // event.logs.forEach(log => {
+        //     const item = itemsById[log.item_id];
+        //     if (!item?.image_path) return;
 
-            const file = item.image_path
-                .split("/")
-                .pop()
-                .replace(/\.[^/.]+$/, "");
+        //     const file = item.image_path
+        //         .split("/")
+        //         .pop()
+        //         .replace(/\.[^/.]+$/, "");
 
-            const img = document.createElement("img");
-            img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
+        //     const img = document.createElement("img");
+        //     img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
 
-            collage.appendChild(img);
-        });
+        //     collage.appendChild(img);
+        // });
 
-        right.appendChild(collage);
+        // right.appendChild(collage);
 
         grid.appendChild(left);
-        grid.appendChild(right);
+        // grid.appendChild(right);
 
         eventDiv.appendChild(grid);
         eventsList.appendChild(eventDiv);
