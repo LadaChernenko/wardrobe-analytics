@@ -150,12 +150,31 @@
         </div>
 
         <div class="card">
-            <h2>Cost per use</h2>
-            <div class="stat" id="avg-cpu">—</div>
-            <div class="stat-label">Средняя</div>
+            <h2>Общее</h2>
+
+            <div class="stat" id="total-cost">—</div>
+            <div class="stat-label">Общая стоимость гардероба</div>
             <br>
-            <div class="stat" id="median-cpu">—</div>
-            <div class="stat-label">Медианная</div>
+
+            <div class="stat" id="items-count">—</div>
+            <div class="stat-label">Количество вещей</div>
+
+            <hr style="margin:16px 0; border:none; border-top:1px solid #eee;">
+
+            <ul>
+                <li>
+                    <strong id="avg-cpu">—</strong>
+                    <div class="stat-label">Средняя стоимость выхода</div>
+                </li>
+                <li>
+                    <strong id="median-cpu">—</strong>
+                    <div class="stat-label">Медианная стоимость выхода</div>
+                </li>
+                <li>
+                    <strong id="total-cpu">—</strong>
+                    <div class="stat-label">Суммарный cost per use</div>
+                </li>
+            </ul>
         </div>
 
         <div class="card">
@@ -198,25 +217,40 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+function rub(value) {
+    return value !== null ? `${Math.round(value)} ₽` : '—';
+}
 async function loadBaseAnalytics() {
     const topItems = await fetch('/analytics/top-items').then(r => r.json());
     document.getElementById('top-items').innerHTML =
         topItems.map(i => `<li>${i.item} — ${i.usage_count} выходов</li>`).join('');
 
     const cost = await fetch('/analytics/cost-stats').then(r => r.json());
+
+    // cost per use
     document.getElementById('avg-cpu').textContent =
-        cost.avg_cpu !== null ? cost.avg_cpu.toFixed(2) : '—';
+        rub(cost.avg_cpu);
+
     document.getElementById('median-cpu').textContent =
-        cost.median_cpu !== null ? cost.median_cpu.toFixed(2) : '—';
+        rub(cost.median_cpu);
+
+    // агрегаты
+    document.getElementById('total-cost').textContent =
+        rub(cost.total_cost);
+
+    document.getElementById('items-count').textContent =
+        cost.items_count !== null ? Math.round(cost.items_count) : '—';
+
+    document.getElementById('total-cpu').textContent =
+        rub(cost.total_cost_per_use);
 
     const balance = await fetch('/analytics/distribution').then(r => r.json());
-
     renderPieChart('categoryChart', balance.by_category, 'По категориям');
     renderPieChart('seasonChart', balance.by_season, 'По сезонам');
 
     const best = await fetch('/analytics/best-value').then(r => r.json());
     document.getElementById('best-value').innerHTML =
-        best.map(i => `<li>${i.item} — ${i.cost_per_use}</li>`).join('');
+        best.map(i => `<li>${i.item} — ${rub(i.cost_per_use)}</li>`).join('');
 }
 
 async function loadMistakes() {

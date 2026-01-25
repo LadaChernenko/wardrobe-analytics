@@ -150,14 +150,24 @@ h2 {
     gap: 12px;
 }
 
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
 .item {
     background: #fafafa;
     border-radius: 14px;
     padding: 8px;
-    text-align: center;
     cursor: pointer;
+
     border: 2px solid transparent;
     transition: border 0.15s ease, background 0.15s ease;
+
+    display: flex;
+    flex-direction: column;
+    height: 220px;
 }
 
 .item:hover {
@@ -169,13 +179,28 @@ h2 {
     background: #ede9fe;
 }
 
-.item img {
-    max-width: 100px;
-    max-height: 140px;
-    object-fit: contain;
-    margin-bottom: 6px;
+/* === IMAGE === */
+
+.item-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+.item-image img {
+    max-width: 120px;
+    max-height: 160px;
+    object-fit: contain;
+}
+
+/* === NAME === */
+
+.item-name {
+    font-size: 13px;
+    margin-top: 6px;
+    text-align: center;
+}
 /* ===== EVENT BOX ===== */
 
 .event-box {
@@ -444,20 +469,38 @@ function createGrid(items) {
     grid.className = "grid";
 
     items.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "item";
-        if (selectedItemIds.has(item.id)) div.classList.add("selected");
+        const card = document.createElement("div");
+        card.className = "item";
 
-        if (item.image_path && item.category) {
-            const img = document.createElement("img");
-            const file = item.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
-            img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
-            div.appendChild(img);
+        if (selectedItemIds.has(item.id)) {
+            card.classList.add("selected");
         }
 
-        div.append(item.item);
-        div.onclick = () => toggleItem(item.id);
-        grid.appendChild(div);
+        if (item.image_path && item.category) {
+            const imageWrapper = document.createElement("div");
+            imageWrapper.className = "item-image";
+
+            const img = document.createElement("img");
+            const file = item.image_path
+                .split("/")
+                .pop()
+                .replace(/\.[^/.]+$/, "");
+
+            img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
+
+            imageWrapper.appendChild(img);
+            card.appendChild(imageWrapper);
+        }
+
+        const name = document.createElement("div");
+        name.className = "item-name";
+        name.textContent = item.item;
+
+        card.appendChild(name);
+
+        card.onclick = () => toggleItem(item.id);
+
+        grid.appendChild(card);
     });
 
     return grid;

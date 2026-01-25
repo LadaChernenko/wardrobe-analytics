@@ -11,7 +11,8 @@ from core.logger import logger
 
 class ClothesSegmentator():
     def __init__(self, 
-                 model_name: str = "mattmdjaga/segformer_b2_clothes"
+                #  model_name: str = "mattmdjaga/segformer_b2_clothes"
+                 model_name: str = "sayeed99/segformer_b3_clothes"
                  ):
         self.extractor = AutoFeatureExtractor.from_pretrained(
             model_name

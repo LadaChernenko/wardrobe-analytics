@@ -13,8 +13,10 @@ class WearLogRead(BaseModel):
     id: int
     item_id: int
     event_id: int | None
+    current_cost_per_use: float
     date: date
     notes: str | None
 
     class Config:
         orm_mode = True
+

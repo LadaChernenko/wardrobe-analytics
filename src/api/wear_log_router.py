@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import date
 
 from core.database import get_sync_session
@@ -23,6 +24,7 @@ def add_wear_log(entry: WearLogCreate):
         wear = WearLog(
             item_id=entry.item_id,
             event_id=entry.event_id,
+            current_cost_per_use=item.cost_per_use,
             date=entry.date,
             notes=entry.notes
         )
@@ -162,6 +164,7 @@ def add_items_to_event(
             wear = WearLog(
                 item_id=item_id,
                 event_id=event_id,
+                current_cost_per_use=item.cost_per_use,
                 date=event_date,
                 notes=notes,
             )
@@ -184,3 +187,4 @@ def add_items_to_event(
         )
 
         return created_logs
+    

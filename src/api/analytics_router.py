@@ -42,6 +42,9 @@ def get_cost_stats():
         return CostStatsRead(
             avg_cpu=stats.avg_cpu,
             median_cpu=stats.median_cpu,
+            total_cost=stats.total_cost,
+            items_count=stats.items_count,
+            total_cost_per_use=stats.total_cost_per_use,
         )
 
 @router.get("/distribution")

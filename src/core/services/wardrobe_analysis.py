@@ -41,13 +41,21 @@ def top_items(
 def cost_per_use_stats():
     '''
     Средняя и медианная себестоимость вещи
+    + агрегаты по гардеробу
     '''
     stmt = select(
+        # базовые метрики
         func.avg(Item.cost_per_use).label("avg_cpu"),
         func.percentile_cont(0.5)
             .within_group(Item.cost_per_use)
             .label("median_cpu"),
+
+        # новые агрегаты
+        func.sum(Item.cost).label("total_cost"),
+        func.count(Item.id).label("items_count"),
+        func.sum(Item.cost_per_use).label("total_cost_per_use"),
     )
+
     return stmt
 
 def cost_per_use_dynamic():

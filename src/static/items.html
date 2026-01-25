@@ -53,7 +53,14 @@
             background: var(--accent-hover);
         }
         /* ===== GALLERY ===== */
-
+        .content-card {
+            max-width: 1400px;      /* чтобы не растягивалось на ультрашироких */
+            margin: 0 auto;         /* центрирование */
+            padding: 20px 24px;     /* отступы от краёв */
+            background: var(--card-bg);
+            border-radius: 18px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+        }
         .group {
             margin-bottom: 28px;
         }
@@ -136,6 +143,54 @@
             color: var(--text-secondary);
         }
 
+        tr {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        tr:hover {
+            transform: scale(1.01);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            /* border: 1px solid rgba(0,0,0,0.1); */
+        }
+
+
+        th[data-sort] {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 18px;
+        }
+
+        th[data-sort]:hover {
+            color: var(--accent);
+        }
+
+        th[data-sort]::after {
+            content: "⇅";
+            position: absolute;
+            right: 6px;
+            opacity: 0.3;
+            font-size: 12px;
+        }
+
+        th.sorted.asc::after {
+            content: "▲";
+            opacity: 1;
+        }
+
+        th.sorted.desc::after {
+            content: "▼";
+            opacity: 1;
+        }
+
+        th.sorted {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        td {
+            transition: background-color 0.2s ease;
+        }
+
         td.actions button {
             background: none;
             border: none;
@@ -205,29 +260,29 @@
 </div>
 
 <!-- ===== TABLE VIEW ===== -->
+<div class="content-card">
+    <table id="tableView">
+        <thead>
+        <tr>
+            <th>Название</th>
+            <th>Бренд</th>
+            <th>Категория</th>
+            <th>Сезон</th>
+            <th>Год</th>
+            <th>Стиль</th>
+            <th data-sort="cost">Стоимость</th>
+            <th data-sort="use">Использований</th>
+            <th data-sort="cost_per_use">Cost / use</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody id="itemsTable"></tbody>
+    </table>
 
-<table id="tableView">
-    <thead>
-    <tr>
-        <th>Название</th>
-        <th>Бренд</th>
-        <th>Категория</th>
-        <th>Сезон</th>
-        <th>Год</th>
-        <th>Стиль</th>
-        <th>Стоимость</th>
-        <th>Использований</th>
-        <th>Cost / use</th>
-        <th></th>
-    </tr>
-    </thead>
-    <tbody id="itemsTable"></tbody>
-</table>
+    <!-- ===== GRID VIEW ===== -->
 
-<!-- ===== GRID VIEW ===== -->
-
-<div id="gridView" style="display:none"></div>
-
+    <div id="gridView" style="display:none"></div>
+</div>
 <!-- ===== MODAL ===== -->
 
 <div class="modal" id="itemModal">

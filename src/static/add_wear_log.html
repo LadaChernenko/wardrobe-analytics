@@ -352,12 +352,22 @@ function renderEvents(events) {
         const formattedDate = event.date
             ? new Date(event.date).toLocaleDateString("ru-RU")
             : "—";
+        const totalCost = event.logs.reduce(
+            (sum, log) => sum + (log.current_cost_per_use ?? 0),
+            0
+        );
 
         eventDiv.innerHTML = `
             <div class="event-header">
-                <b>Event ${event.eventId}
-                    <span class="muted">(${formattedDate})</span>
-                </b>
+                <div>
+                    <b>Event ${event.eventId}
+                        <span class="muted">(${formattedDate})</span>
+                    </b>
+                    <div class="muted">
+                        Стоимость выхода: <b>${totalCost.toFixed(2)} ₽</b>
+                    </div>
+                </div>
+
                 <div class="event-actions">
                     <button class="add-btn">
                         <img src="/static/icons/pencil.png">
