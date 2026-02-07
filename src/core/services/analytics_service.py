@@ -7,6 +7,7 @@ from core.services.wardrobe_analysis import (
     usage_per_item_stats,
     category_distribution,
     season_distribution,
+    style_distribution,
     best_value_items,
     expensive_mistakes,
 )
@@ -32,6 +33,7 @@ class AnalyticsService:
         return {
             "by_category": self.session.execute(category_distribution()).all(),
             "by_season": self.session.execute(season_distribution()).all(),
+            "by_style": self.session.execute(style_distribution()).all(),
         }
 
     def get_best_value_items(self, **filters):

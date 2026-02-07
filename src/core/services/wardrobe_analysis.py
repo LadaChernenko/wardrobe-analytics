@@ -136,31 +136,25 @@ def forgotten_items(
 
     return stmt
 
-def category_distribution():
-    '''
-    Сбалансированность гардероба по категориям
-    '''
-    stmt = (
+def distribution_by(field):
+    return (
         select(
-            Item.category,
+            field.label("key"),
             func.count(Item.id).label("items_count"),
+            func.sum(Item.cost).label("total_cost"),
         )
-        .group_by(Item.category)
+        .group_by(field)
     )
-    return stmt
+
+def category_distribution():
+    return distribution_by(Item.category)
 
 def season_distribution():
-    '''
-    Сбалансированность гардероба по сезонам
-    '''
-    stmt = (
-        select(
-            Item.season,
-            func.count(Item.id).label("items_count"),
-        )
-        .group_by(Item.season)
-    )
-    return stmt
+    return distribution_by(Item.season)
+
+def style_distribution():
+    return distribution_by(Item.style)
+
 
 def best_value_items(
     season: SeasonEnum | None = None,

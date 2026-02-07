@@ -144,10 +144,30 @@
 <div class="container">
     <div class="grid">
 
-        <div class="card">
-            <h2>Топ-10 носимых вещей</h2>
-            <ul id="top-items"></ul>
+    <div class="card">
+        <h2>Топ-10 носимых вещей</h2>
+
+        <label>
+            Период:
+            <select id="topPeriod" onchange="togglePeriodInputs()">
+                <option value="all">За всё время</option>
+                <option value="month">За месяц</option>
+                <option value="year">За год</option>
+            </select>
+        </label>
+
+        <div id="monthPicker" style="display:none; margin-top:6px;">
+            <input type="month" id="topMonth">
         </div>
+
+        <div id="yearPicker" style="display:none; margin-top:6px;">
+            <input type="month" id="topYear">
+        </div>
+
+        <button onclick="loadTopItems()">Применить</button>
+
+        <ul id="top-items"></ul>
+    </div>
 
         <div class="card">
             <h2>Общее</h2>
@@ -178,13 +198,18 @@
         </div>
 
         <div class="card">
-            <h2>Баланс по категориям</h2>
-            <canvas id="categoryChart"></canvas>
-        </div>
+            <h2>Баланс гардероба</h2>
 
-        <div class="card">
-            <h2>Баланс по сезонам</h2>
-            <canvas id="seasonChart"></canvas>
+            <label>
+                Агрегировать по:
+                <select id="balanceType" onchange="updateBalanceChart()">
+                    <option value="by_category">Категориям</option>
+                    <option value="by_season">Сезонам</option>
+                    <option value="by_style">Стилям</option>
+                </select>
+            </label>
+
+            <canvas id="balanceChart" style="margin-top:16px;"></canvas>
         </div>
         
         <div class="card">
@@ -215,15 +240,69 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let balanceData = null;
+let balanceChart = null;
+</script>
+<script>
+function togglePeriodInputs() {
+    const period = document.getElementById('topPeriod').value;
+
+    document.getElementById('monthPicker').style.display =
+        period === 'month' ? 'block' : 'none';
+
+    document.getElementById('yearPicker').style.display =
+        period === 'year' ? 'block' : 'none';
+
+    if (period === 'all') {
+        loadTopItems();
+    }
+}
+</script>
+
+<script>
+async function loadTopItems() {
+    const period = document.getElementById('topPeriod').value;
+
+    let url = '/analytics/top-items';
+
+    if (period === 'month') {
+        const value = document.getElementById('topMonth').value;
+        if (value) {
+            const [year, month] = value.split('-');
+            const from = `${year}-${month}-01`;
+            const to = new Date(year, month, 0).toISOString().slice(0, 10);
+            url += `?date_from=${from}&date_to=${to}`;
+        }
+    }
+
+    if (period === 'year') {
+        const value = document.getElementById('topYear').value;
+        if (value) {
+            const [year] = value.split('-');
+            url += `?date_from=${year}-01-01&date_to=${year}-12-31`;
+        }
+    }
+
+    const topItems = await fetch(url).then(r => r.json());
+
+    document.getElementById('top-items').innerHTML =
+        topItems.length
+            ? topItems.map(i =>
+                `<li>${i.item} — ${i.usage_count} выходов</li>`
+              ).join('')
+            : '<li>Нет данных за выбранный период</li>';
+}
+</script>
 
 <script>
 function rub(value) {
     return value !== null ? `${Math.round(value)} ₽` : '—';
 }
 async function loadBaseAnalytics() {
-    const topItems = await fetch('/analytics/top-items').then(r => r.json());
-    document.getElementById('top-items').innerHTML =
-        topItems.map(i => `<li>${i.item} — ${i.usage_count} выходов</li>`).join('');
+    // const topItems = await fetch('/analytics/top-items').then(r => r.json());
+    // document.getElementById('top-items').innerHTML =
+    //    topItems.map(i => `<li>${i.item} — ${i.usage_count} выходов</li>`).join('');
 
     const cost = await fetch('/analytics/cost-stats').then(r => r.json());
 
@@ -244,9 +323,8 @@ async function loadBaseAnalytics() {
     document.getElementById('total-cpu').textContent =
         rub(cost.total_cost_per_use);
 
-    const balance = await fetch('/analytics/distribution').then(r => r.json());
-    renderPieChart('categoryChart', balance.by_category, 'По категориям');
-    renderPieChart('seasonChart', balance.by_season, 'По сезонам');
+    balanceData = await fetch('/analytics/distribution').then(r => r.json());
+    renderBalanceChart('by_category');
 
     const best = await fetch('/analytics/best-value').then(r => r.json());
     document.getElementById('best-value').innerHTML =
@@ -274,16 +352,28 @@ loadMistakes();
 
 </script>
 <script>
-function renderPieChart(canvasId, data, title) {
-    const ctx = document.getElementById(canvasId);
+function renderBalanceChart(type) {
+    const data = balanceData[type];
+
     const sorted = [...data].sort(
         (a, b) => b.items_count - a.items_count
     );
 
     const labels = sorted.map(d => d.key);
     const values = sorted.map(d => d.items_count);
+    const costs = sorted.map(d => d.total_cost);
 
-    new Chart(ctx, {
+    const ctx = document.getElementById('balanceChart');
+    const labelMap = {
+        by_category: 'Категория',
+        by_season: 'Сезон',
+        by_style: 'Стиль'
+    };
+    if (balanceChart) {
+        balanceChart.destroy();
+    }
+
+    balanceChart = new Chart(ctx, {
         type: 'pie',
         data: {
             labels,
@@ -297,24 +387,44 @@ function renderPieChart(canvasId, data, title) {
                     '#f87171',
                     '#a78bfa',
                     '#fb7185'
-                ]
+                ],
+                meta: costs,
+                aggType: type
             }]
         },
         options: {
-            responsive: true,
             plugins: {
                 legend: {
                     position: 'bottom'
                 },
-                title: {
-                    display: false,
-                    text: title
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const i = context.dataIndex;
+                            const count = context.dataset.data[i];
+                            const cost = context.dataset.meta[i];
+                            const aggType = context.dataset.aggType;
+                            const labelName = labelMap[aggType];
+
+                            return [
+                                `Вещей: ${count}`,
+                                `Общая стоимость: ${Math.round(cost)} ₽`
+                            ];
+
+                        }
+                    }
                 }
             }
         }
     });
 }
+function updateBalanceChart() {
+    const type = document.getElementById('balanceType').value;
+    renderBalanceChart(type);
+}
 </script>
-
+<script>
+loadTopItems();
+</script>
 </body>
 </html>

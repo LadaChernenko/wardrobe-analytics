@@ -341,6 +341,10 @@ filterCategory.onchange = render;
 groupMode.onchange = render;
 modal.onclick = e => e.target === modal && closeModal();
 
+
+function exportItemsCSV() {
+    window.location.href = "/items/export/csv";
+}
 /* =========================================================
    INIT
 ========================================================= */

@@ -200,26 +200,27 @@
 
         /* ===== ICONS ===== */
 
+
         .icon-btn {
-            background: none;
-            border: none;
-            padding: 4px;
-            cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: #fafafa;
+            cursor: pointer;
+            font-size: 13px;
         }
 
         .icon-btn img {
             width: 16px;
             height: 16px;
-            opacity: 0.75;
-            transition: opacity 0.15s ease, transform 0.15s ease;
+            opacity: 0.8;
         }
 
         .icon-btn:hover img {
             opacity: 1;
-            transform: scale(1.1);
         }
     </style>
 </head>
@@ -230,8 +231,14 @@
     <a class="back-btn" href="index.html">← На главную</a>
 </header>
 
-<button onclick="openCreate()">➕ Добавить предмет</button>
-
+<button onclick="openCreate()" class="icon-btn" title="Добавить предмет">
+    <img src="/static/icons/add.png" alt="Добавить предмет">
+    <span>Добавить предмет</span>
+</button>
+<button type="button" onclick="exportItemsCSV()" class="icon-btn" title="Экспорт CSV">
+    <img src="/static/icons/save.png" alt="Экспорт CSV">
+    <span>Экспорт CSV</span>
+</button>
 <div class="controls">
 
     <div class="view-switch">
@@ -322,7 +329,11 @@
             <img id="preview">
 
             <div style="display:flex; justify-content:space-between;">
-                <button type="submit">💾 Сохранить</button>
+                <button type="submit" class="icon-btn" title="Сохранить">
+                    <img src="/static/icons/save.png" alt="Сохранить">
+                    <span>Сохранить</span>
+                </button>
+
                 <button type="button" onclick="closeModal()">Отмена</button>
             </div>
         </form>

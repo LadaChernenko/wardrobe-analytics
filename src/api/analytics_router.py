@@ -53,15 +53,20 @@ def distribution():
         service = AnalyticsService(session)
         balance = service.get_balance()
 
+        def serialize(rows):
+            return [
+                {
+                    "key": r.key,
+                    "items_count": r.items_count,
+                    "total_cost": r.total_cost or 0
+                }
+                for r in rows
+            ]
+
         return {
-            "by_category": [
-                {"key": r.category, "items_count": r.items_count}
-                for r in balance["by_category"]
-            ],
-            "by_season": [
-                {"key": r.season, "items_count": r.items_count}
-                for r in balance["by_season"]
-            ],
+            "by_category": serialize(balance["by_category"]),
+            "by_season": serialize(balance["by_season"]),
+            "by_style": serialize(balance["by_style"]),
         }
 
     

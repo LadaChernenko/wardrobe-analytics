@@ -9,6 +9,9 @@ import uuid
 from pathlib import Path
 from sqlalchemy.orm import Session
 from enum import Enum as PyEnum
+import csv
+import io
+from fastapi.responses import StreamingResponse
 
 from core.database import get_sync_session
 from core.settings import settings
@@ -213,3 +216,62 @@ def delete_item(item_id: int):
         session.commit()
 
         logger.info(f"Item {item_id} deleted")
+
+
+@router.get("/export/csv")
+def export_items_csv():
+    with get_sync_session() as session:
+        items = session.query(Item).order_by(Item.created_at.asc()).all()
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Заголовки CSV
+        writer.writerow([
+            "id",
+            "item",
+            "brand",
+            "category",
+            "season",
+            "year_of_buying",
+            "style",
+            "colour",
+            "extra_colour",
+            "damage",
+            "cost",
+            "use",
+            "cost_per_use",
+            "image_path",
+            "created_at",
+        ])
+
+        for i in items:
+            writer.writerow([
+                i.id,
+                i.item,
+                i.brand,
+                i.category.value if i.category else None,
+                i.season.value if i.season else None,
+                i.year_of_buying,
+                i.style,
+                i.colour,
+                i.extra_colour,
+                i.damage,
+                i.cost,
+                i.use,
+                i.cost_per_use,
+                i.image_path,
+                i.created_at.isoformat() if i.created_at else None,
+            ])
+
+        output.seek(0)
+
+        headers = {
+            "Content-Disposition": "attachment; filename=items.csv"
+        }
+
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers=headers
+        )
