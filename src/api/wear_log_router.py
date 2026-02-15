@@ -1,5 +1,8 @@
+import csv
+import io
 from fastapi import APIRouter, HTTPException
-from sqlalchemy.orm import Session
+from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from datetime import date
 
@@ -51,7 +54,7 @@ def get_wear_logs(event_id: int | None = None):
         logs = query.order_by(WearLog.date.desc()).all()
         return logs
     
-@router.delete("/{event_id}", status_code=204)
+@router.delete("/event/{event_id}", status_code=204)
 def delete_event(event_id: int):
     with get_sync_session() as session:
         logs = (
@@ -96,7 +99,7 @@ def delete_event(event_id: int):
             f"affected_items={list(items_stats.keys())}"
         )
 
-@router.delete("/{id}", status_code=204)
+@router.delete("/log/{id}", status_code=204)
 def delete_log(id: int):
     with get_sync_session() as session:
         wear_log = session.get(WearLog, id)
@@ -188,3 +191,46 @@ def add_items_to_event(
 
         return created_logs
     
+@router.get("/export/csv")
+def export_logs_csv():
+    with get_sync_session() as session:
+        logs = (
+            session.query(WearLog)
+            .options(joinedload(WearLog.item))
+            .order_by(WearLog.date.asc())
+            .all()
+        )
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow([
+            "id",
+            "item_id",
+            "event_id",
+            "current_cost_per_use",
+            "date",
+            "notes",
+            "item_name",
+        ])
+
+        for log in logs:
+            writer.writerow([
+                log.id,
+                log.item_id,
+                log.event_id,
+                log.current_cost_per_use,
+                log.date.isoformat() if log.date else None,
+                log.notes,
+                log.item.item if log.item else None,
+            ])
+
+        output.seek(0)
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": "attachment; filename=wear_logs.csv"
+            }
+        )

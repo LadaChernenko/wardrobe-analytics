@@ -150,11 +150,6 @@ h2 {
     gap: 12px;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-}
 
 .item {
     background: #fafafa;
@@ -220,6 +215,24 @@ h2 {
     background: none;
     border: none;
     cursor: pointer;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.delete-btn img {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.delete-btn:hover img {
+    opacity: 1;
 }
 
 /* ===== COLLAGE ===== */
@@ -327,9 +340,13 @@ hr {
 
         <p>
             Event: <b id="eventLabel"></b><br>
-            <button id="goToLogsBtn">Перейти к логам</button>
         </p>
-
+        <div>
+            <button id="goToLogsBtn">Перейти к логам</button>
+            <button id="newEventBtn" style="margin-top:10px; display:none;">
+                Добавить ещё один выход
+            </button>
+        </div>
         <input type="date" id="eventDate">
 
         <div id="eventItems"></div>
@@ -524,7 +541,9 @@ function renderEventItems() {
         row.className = "event-item";
         row.innerHTML = `
             <span>${itemsById[id].item}</span>
-            <button>❌</button>
+            <button class="delete-btn">
+                <img src="/static/icons/delete.png" alt="Удалить">
+            </button>
         `;
         row.querySelector("button").onclick = () => {
             selectedItemIds.delete(id);
@@ -533,6 +552,22 @@ function renderEventItems() {
         eventItemsDiv.appendChild(row);
     });
 }
+function createNewEvent() {
+    currentEventId = Math.floor(Date.now() / 1000);
+    document.getElementById("eventLabel").textContent = currentEventId;
+
+    selectedItemIds.clear();
+    document.getElementById("eventDate").value = "";
+    document.getElementById("notes").value = "";
+
+    savedEventDiv.textContent = "Пока нет данных";
+
+    statusEl.textContent = "";
+    statusEl.className = "";
+
+    renderItems();
+}
+
 
 /* ===== COLLAGE ===== */
 
@@ -585,8 +620,13 @@ document.getElementById("saveBtn").onclick = async () => {
 
     statusEl.textContent = "✔ Выход сохранён";
     statusEl.className = "success";
+    document.getElementById("newEventBtn").style.display = "block";
 };
 
+document.getElementById("newEventBtn").onclick = () => {
+    createNewEvent();
+    document.getElementById("newEventBtn").style.display = "none";
+};
 /* ===== INIT ===== */
 
 loadItems();
