@@ -1,7 +1,9 @@
 # Pet-project Wardrobe Analyzer
+
+**Wardrobe Analytics** — сервис для учета и анализа гардероба. Пользователи добавляют вещи с фото и характеристиками, сервис автоматически сегментирует одежду. Логи ношения позволяют получать статистику по использованию, cost per use и распределению по категориям, сезонам и стилям. 
+
 ```
 wardrobe_api/
-├── configs
 ├── data
 │   ├── Cost_per_use_2025.csv
 │   └── garments
@@ -20,16 +22,17 @@ wardrobe_api/
 │   ├── scripts
 │   ├── models
 │   ├── schemas
-│   ├── __init__.py
 │   ├── main.py
 │   └── static
-│       └── add_item.html
-├── tests
+├── model_weights
+│   └── segformer_b3_clothes.onnx
+├── requirements_hard.txt
 ├── requirements.txt
 └── README.md
 ```
 
 ## Как запустить: 
+
 
 ```bash
 sudo docker compose -f ./docker/docker-compose.yml up --build --detach
@@ -46,3 +49,8 @@ sudo docker exec -it wardrobe_main_api_backend python src/scripts/load_items_fro
 ```bash
 sudo docker logs -f wardrobe_main_api_backend
 ```
+
+*Спросить у меня про веса модели*
+## TODO:
+
+- [ ] 
