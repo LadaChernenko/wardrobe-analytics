@@ -36,7 +36,7 @@ pip-wheel-metadata/
 dist/
 build/
 notebooks/*
-
+*.ipynb
 ############################
 # Tests / Coverage
 ############################
@@ -84,6 +84,7 @@ cache/
 *.onnx
 *.ckpt
 *.safetensors
+
 
 ############################
 # Data / Artifacts

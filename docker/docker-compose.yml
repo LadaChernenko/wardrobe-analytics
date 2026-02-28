@@ -11,6 +11,7 @@ services:
     volumes:
       - ../data:/app/data
       - ../src/alembic/versions:/app/src/alembic/versions
+      - ../model_weights:/app/model_weights
     restart: always
     ports:
       - "3000:6000"
@@ -19,6 +20,11 @@ services:
         condition: service_healthy
     networks:
       - wardrobe_project
+
+    gpus: all
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
   postgres:
     image: postgres:16
