@@ -1,15 +1,27 @@
-FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-runtime
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    ffmpeg libsm6 libxext6 poppler-utils \
+    python3.10 \
+    python3-pip \
+    python3-dev \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-COPY requirements_hard.txt .
-RUN pip install -r requirements.txt
-RUN pip install -r requirements_hard.txt
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+RUN pip install --upgrade pip
+
+
+COPY requirements.txt requirements_hard.txt ./
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -r requirements_hard.txt
 
 COPY ./src ./src
 

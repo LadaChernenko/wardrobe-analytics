@@ -18,8 +18,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - wardrobe_project
+    # networks:
+    #   - wardrobe_project
 
     gpus: all
     environment:
@@ -35,8 +35,8 @@ services:
       - .env
     volumes:
       - ./dbdata:/var/lib/postgresql/data
-    networks:
-      - wardrobe_project
+    # networks:
+    #   - wardrobe_project
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
       interval: 3s
@@ -44,6 +44,6 @@ services:
       retries: 3
 
 
-networks:
-  wardrobe_project:
-    external: true
+# networks:
+#   wardrobe_project:
+#     external: true

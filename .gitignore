@@ -94,6 +94,8 @@ datasets/
 outputs/
 artifacts/
 checkpoints/
+!screenshots/
+model_weights/
 
 ############################
 # Temporary files
