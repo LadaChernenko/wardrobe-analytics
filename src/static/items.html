@@ -125,6 +125,20 @@
             font-size: 14px;
         }
 
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        input[type="color"] {
+            width: 10px;
+            height: 10px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+
         /* ===== TABLE ===== */
 
         table {
@@ -224,6 +238,7 @@
         }
     </style>
 </head>
+
 <body>
 
 <header>
@@ -321,8 +336,47 @@
 
             <input name="year_of_buying" type="number" placeholder="Год покупки">
             <input name="style" placeholder="Стиль">
-            <input name="colour" placeholder="Цвет">
-            <input name="cost" type="number" placeholder="Стоимость">
+            <label>
+                Основной цвет:
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="colourPreview" style="
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 6px;
+                        border: 1px solid #ccc;
+                    "></div>
+
+                    <input type="color" id="colourPicker">
+                </div>
+
+                <input 
+                    type="text" 
+                    name="colour" 
+                    id="colourInput"
+                    placeholder="#000000"
+                    pattern="^#[0-9A-Fa-f]{6}$"
+                >
+            </label>
+
+            <label>
+                Доп. цвет:
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="extraColourPreview" style="
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 6px;
+                        border: 1px solid #ccc;
+                    "></div>
+                    <input type="color" id="colourPicker">
+                    <input 
+                        type="text" 
+                        name="extra_colour" 
+                        id="extraColourInput"
+                        placeholder="#ffffff"
+                        pattern="^#[0-9A-Fa-f]{6}$"
+                    >
+                </div>
+            </label>
             <input name="use" type="number" placeholder="Использований">
 
             <input type="file" name="image" accept="image/*">
@@ -341,5 +395,6 @@
 </div>
 
 <script src="/static/items.js"></script>
+
 </body>
 </html>

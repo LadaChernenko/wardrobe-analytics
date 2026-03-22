@@ -244,6 +244,9 @@ function openCreate() {
     currentItemId = null;
     title.textContent = "Добавить предмет";
     form.reset();
+
+    syncColorInputs();
+
     preview.style.display = "none";
     modal.classList.add("open");
 }
@@ -257,7 +260,8 @@ function openEdit(item) {
         const input = form.querySelector(`[name="${k}"]`);
         if (input) input.value = item[k] ?? "";
     }
-
+    syncColorInputs();
+    
     if (item.image_path && item.category) {
         const file = item.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
         preview.src = `/segmented/${item.category}/${file}_${item.category}.png`;
@@ -267,11 +271,86 @@ function openEdit(item) {
     modal.classList.add("open");
 }
 
+function normalizeHex(color, fallback) {
+    if (!color) return fallback;
+
+    // если нет # — добавляем
+    if (/^[0-9A-Fa-f]{6}$/.test(color)) {
+        return "#" + color;
+    }
+
+    // если уже нормальный hex
+    if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+        return color;
+    }
+
+    return fallback;
+}
+
+function syncColorInputs() {
+    const colourInput = document.getElementById("colourInput");
+    const colourPicker = document.getElementById("colourPicker");
+    const colourPreview = document.getElementById("colourPreview");
+
+    const extraInput = document.getElementById("extraColourInput");
+    const extraPicker = document.getElementById("extraColourPicker");
+    const extraPreview = document.getElementById("extraColourPreview");
+
+    if (colourInput && colourPicker) {
+        const val = normalizeHex(colourInput.value, "#000000");
+        colourInput.value = val;
+        colourPicker.value = val;
+        if (colourPreview) colourPreview.style.backgroundColor = val;
+    }
+
+    if (extraInput && extraPicker) {
+        const val = normalizeHex(extraInput.value, "#ffffff");
+        extraInput.value = val;
+        extraPicker.value = val;
+        if (extraPreview) extraPreview.style.backgroundColor = val;
+    }
+}
+
 function closeModal() {
     modal.classList.remove("open");
     form.reset();
     preview.style.display = "none";
 }
+
+function bindColor(pickerId, inputId, previewId) {
+    const picker = document.getElementById(pickerId);
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+
+    if (!picker || !input) return;
+
+    function update(color) {
+        input.value = color;
+        picker.value = color;
+
+        if (preview) {
+            preview.style.backgroundColor = color;
+        }
+    }
+
+    picker.addEventListener("input", () => update(picker.value));
+
+    input.addEventListener("input", () => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(input.value)) {
+            update(input.value);
+        }
+    });
+}
+
+bindColor("colourPicker", "colourInput", "colourPreview");
+bindColor("extraColourPicker", "extraColourInput", "extraColourPreview");
+
+// document.getElementById("colourPicker").value =
+//     document.getElementById("colourInput").value || "#000000";
+
+// document.getElementById("extraColourPicker").value =
+//     document.getElementById("extraColourInput").value || "#ffffff";
+
 
 /* =========================================================
    CRUD

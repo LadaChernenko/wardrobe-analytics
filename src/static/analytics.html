@@ -156,12 +156,16 @@
             </select>
         </label>
 
-        <div id="monthPicker" style="display:none; margin-top:6px;">
-            <input type="month" id="topMonth">
-        </div>
+        <div id="datePicker" style="display:none; margin-top:10px;">
+            <label>
+                Выберите месяц:
+                <input type="month" id="topDate">
+            </label>
 
-        <div id="yearPicker" style="display:none; margin-top:6px;">
-            <input type="month" id="topYear">
+            <div style="font-size:12px; color:#6b7280; margin-top:4px;">
+                Нажмите на поле, чтобы открыть календарь  
+                (для годовой статистики выберите любой месяц нужного года)
+            </div>
         </div>
 
         <button onclick="loadTopItems()">Применить</button>
@@ -248,11 +252,8 @@ let balanceChart = null;
 function togglePeriodInputs() {
     const period = document.getElementById('topPeriod').value;
 
-    document.getElementById('monthPicker').style.display =
-        period === 'month' ? 'block' : 'none';
-
-    document.getElementById('yearPicker').style.display =
-        period === 'year' ? 'block' : 'none';
+    document.getElementById('datePicker').style.display =
+        period === 'month' || period === 'year' ? 'block' : 'none';
 
     if (period === 'all') {
         loadTopItems();
@@ -265,21 +266,21 @@ async function loadTopItems() {
     const period = document.getElementById('topPeriod').value;
 
     let url = '/analytics/top-items';
+    const value = document.getElementById('topDate').value;
 
-    if (period === 'month') {
-        const value = document.getElementById('topMonth').value;
-        if (value) {
-            const [year, month] = value.split('-');
+    if (value) {
+        const [year, month] = value.split('-');
+
+        if (period === 'month') {
             const from = `${year}-${month}-01`;
-            const to = new Date(year, month, 0).toISOString().slice(0, 10);
+            const to = new Date(year, month, 0)
+                .toISOString()
+                .slice(0, 10);
+
             url += `?date_from=${from}&date_to=${to}`;
         }
-    }
 
-    if (period === 'year') {
-        const value = document.getElementById('topYear').value;
-        if (value) {
-            const [year] = value.split('-');
+        if (period === 'year') {
             url += `?date_from=${year}-01-01&date_to=${year}-12-31`;
         }
     }
@@ -425,6 +426,12 @@ function updateBalanceChart() {
 </script>
 <script>
 loadTopItems();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('topDate').value =
+        new Date().toISOString().slice(0, 7);
+});
 </script>
 </body>
 </html>
