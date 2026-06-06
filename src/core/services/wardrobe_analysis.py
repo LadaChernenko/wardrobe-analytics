@@ -1,4 +1,4 @@
-from sqlalchemy import select, func, desc, and_
+from sqlalchemy import select, func, desc, and_, case
 from datetime import date
 from models.item import Item
 from models.wear_log import WearLog
@@ -213,3 +213,44 @@ def expensive_mistakes(
 
     return stmt
 
+def least_used_items(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    max_usage: int = 1,
+    limit: int = 20,
+):
+    """
+    Вещи, которые были надеты не более 1 раза за период.
+    """
+    join_condition = WearLog.item_id == Item.id
+
+    if date_from and date_to:
+        join_condition = and_(
+            WearLog.item_id == Item.id,
+            WearLog.date.between(date_from, date_to),
+        )
+
+    usage_count = func.count(
+        func.distinct(WearLog.event_id)
+    )
+
+    stmt = (
+        select(
+            Item.id,
+            Item.item,
+            usage_count.label("usage_count"),
+        )
+        .outerjoin(
+            WearLog,
+            join_condition,
+        )
+        .group_by(Item.id)
+        .having(usage_count <= max_usage)
+        .order_by(
+            usage_count.asc(),
+            Item.item.asc(),
+        )
+        .limit(limit)
+    )
+
+    return stmt

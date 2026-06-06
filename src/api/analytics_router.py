@@ -97,3 +97,25 @@ def get_best_value_items():
                 )
                 for r in rows
         ]
+    
+@router.get("/least-used-items", response_model=list[TopItemRead])
+def get_least_used_items(
+    date_from: date | None = None,
+    date_to: date | None = None,
+):
+    with get_sync_session() as session:
+        service = AnalyticsService(session)
+
+        rows = service.get_least_used_items(
+            date_from=date_from,
+            date_to=date_to,
+        )
+
+        return [
+            TopItemRead(
+                id=r.id,
+                item=r.item,
+                usage_count=r.usage_count,
+            )
+            for r in rows
+        ]

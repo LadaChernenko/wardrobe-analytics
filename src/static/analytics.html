@@ -172,34 +172,58 @@
 
         <ul id="top-items"></ul>
     </div>
+    <div class="card">
+        <h2>Редко надеваемые вещи</h2>
 
-        <div class="card">
-            <h2>Общее</h2>
+        <label>
+            Период:
+            <select id="leastPeriod" onchange="toggleLeastPeriodInputs()">
+                <option value="all">За всё время</option>
+                <option value="month">За месяц</option>
+                <option value="year">За год</option>
+            </select>
+        </label>
 
-            <div class="stat" id="total-cost">—</div>
-            <div class="stat-label">Общая стоимость гардероба</div>
-            <br>
-
-            <div class="stat" id="items-count">—</div>
-            <div class="stat-label">Количество вещей</div>
-
-            <hr style="margin:16px 0; border:none; border-top:1px solid #eee;">
-
-            <ul>
-                <li>
-                    <strong id="avg-cpu">—</strong>
-                    <div class="stat-label">Средняя стоимость выхода</div>
-                </li>
-                <li>
-                    <strong id="median-cpu">—</strong>
-                    <div class="stat-label">Медианная стоимость выхода</div>
-                </li>
-                <li>
-                    <strong id="total-cpu">—</strong>
-                    <div class="stat-label">Суммарный cost per use</div>
-                </li>
-            </ul>
+        <div id="leastDatePicker" style="display:none; margin-top:10px;">
+            <label>
+                Выберите месяц:
+                <input type="month" id="leastDate">
+            </label>
         </div>
+
+        <button onclick="loadLeastUsedItems()">
+            Применить
+        </button>
+
+        <ul id="least-items"></ul>
+    </div>
+    <div class="card">
+        <h2>Общее</h2>
+
+        <div class="stat" id="total-cost">—</div>
+        <div class="stat-label">Общая стоимость гардероба</div>
+        <br>
+
+        <div class="stat" id="items-count">—</div>
+        <div class="stat-label">Количество вещей</div>
+
+        <hr style="margin:16px 0; border:none; border-top:1px solid #eee;">
+
+        <ul>
+            <li>
+                <strong id="avg-cpu">—</strong>
+                <div class="stat-label">Средняя стоимость выхода</div>
+            </li>
+            <li>
+                <strong id="median-cpu">—</strong>
+                <div class="stat-label">Медианная стоимость выхода</div>
+            </li>
+            <li>
+                <strong id="total-cpu">—</strong>
+                <div class="stat-label">Суммарный cost per use</div>
+            </li>
+        </ul>
+    </div>
 
         <div class="card">
             <h2>Баланс гардероба</h2>
@@ -259,6 +283,20 @@ function togglePeriodInputs() {
         loadTopItems();
     }
 }
+
+function toggleLeastPeriodInputs() {
+    const period =
+        document.getElementById('leastPeriod').value;
+
+    document.getElementById('leastDatePicker').style.display =
+        period === 'month' || period === 'year'
+            ? 'block'
+            : 'none';
+
+    if (period === 'all') {
+        loadLeastUsedItems();
+    }
+}
 </script>
 
 <script>
@@ -292,6 +330,49 @@ async function loadTopItems() {
             ? topItems.map(i =>
                 `<li>${i.item} — ${i.usage_count} выходов</li>`
               ).join('')
+            : '<li>Нет данных за выбранный период</li>';
+}
+
+async function loadLeastUsedItems() {
+    const period =
+        document.getElementById('leastPeriod').value;
+
+    let url = '/analytics/least-used-items';
+
+    const value =
+        document.getElementById('leastDate').value;
+
+    if (value) {
+        const [year, month] = value.split('-');
+
+        if (period === 'month') {
+            const from = `${year}-${month}-01`;
+
+            const to = new Date(year, month, 0)
+                .toISOString()
+                .slice(0, 10);
+
+            url += `?date_from=${from}&date_to=${to}`;
+        }
+
+        if (period === 'year') {
+            url += `?date_from=${year}-01-01&date_to=${year}-12-31`;
+        }
+    }
+
+    const items = await fetch(url).then(r => r.json());
+
+    document.getElementById('least-items').innerHTML =
+        items.length
+            ? items.map(i => `
+                <li style="${
+                    i.usage_count === 0
+                        ? 'color:#000000;font-weight:600'
+                        : ''
+                }">
+                    ${i.item} — ${i.usage_count} выходов
+                </li>
+            `).join('')
             : '<li>Нет данных за выбранный период</li>';
 }
 </script>
@@ -426,11 +507,18 @@ function updateBalanceChart() {
 </script>
 <script>
 loadTopItems();
+loadLeastUsedItems();
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('topDate').value =
+    const currentMonth =
         new Date().toISOString().slice(0, 7);
+
+    document.getElementById('topDate').value =
+        currentMonth;
+
+    document.getElementById('leastDate').value =
+        currentMonth;
 });
 </script>
 </body>

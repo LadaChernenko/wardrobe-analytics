@@ -10,6 +10,7 @@ from core.services.wardrobe_analysis import (
     style_distribution,
     best_value_items,
     expensive_mistakes,
+    least_used_items,
 )
 
 class AnalyticsService:
@@ -63,3 +64,15 @@ class AnalyticsService:
             }
             for r in rows
         ]
+
+    def get_least_used_items(
+        self,
+        date_from: date | None,
+        date_to: date | None,
+    ):
+        stmt = least_used_items(
+            date_from=date_from,
+            date_to=date_to,
+        )
+
+        return self.session.execute(stmt).all()
