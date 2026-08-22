@@ -2,332 +2,37 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Внести запись</title>
-<!-- <link rel="stylesheet" href="/static/base.css"> -->
-<style>
-
-:root {
-    --bg: #f5f6f8;
-    --card-bg: #ffffff;
-    --text-main: #1f2933;
-    --text-secondary: #6b7280;
-    --accent: #7c3aed;
-    --accent-hover: #6d28d9;
-    --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-    --radius: 18px;
-}
-
-body {
-    margin: 0;
-    font-family: system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text-main);
-}
-
-/* ===== PAGE HEADER ===== */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 32px;
-}
-
-h1 {
-    margin: 0;
-    font-size: 32px;
-}
-
-.back-btn {
-    padding: 10px 16px;
-    background: var(--accent);
-    color: white;
-    text-decoration: none;
-    border-radius: 10px;
-    font-size: 14px;
-}
-
-.back-btn:hover {
-    background: var(--accent-hover);
-}
-h2 {
-    margin: 0;
-    padding: 32px;
-    font-size: 32px;
-}
-
-/* ===== LAYOUT ===== */
-
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 0 32px 48px;
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
-}
-
-/* ===== CARDS ===== */
-
-.left,
-.right {
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 24px;
-}
-
-.left h3,
-.right h3,
-.right h4 {
-    margin-top: 0;
-}
-
-/* ===== CATEGORIES ===== */
-
-.categories {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-}
-
-.categories button {
-    padding: 6px 12px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    background: #fafafa;
-    font-size: 13px;
-    color: var(--text-main); 
-}
-
-.categories button.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
-/* ===== GROUPING ===== */
-
-.grouping {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.grouping button {
-    padding: 6px 10px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    background: #fafafa;
-    font-size: 13px;
-    color: var(--text-main); 
-}
-
-.grouping button.active {
-    background: #e0e7ff;
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
-/* ===== GROUPS ===== */
-
-.group {
-    margin-bottom: 28px;
-}
-
-.group-title {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-}
-
-/* ===== ITEMS GRID ===== */
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
-}
-
-
-.item {
-    background: #fafafa;
-    border-radius: 14px;
-    padding: 8px;
-    cursor: pointer;
-
-    border: 2px solid transparent;
-    transition: border 0.15s ease, background 0.15s ease;
-
-    display: flex;
-    flex-direction: column;
-    height: 220px;
-}
-
-.item:hover {
-    background: #f3f4f6;
-}
-
-.item.selected {
-    border-color: var(--accent);
-    background: #ede9fe;
-}
-
-/* === IMAGE === */
-
-.item-image {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.item-image img {
-    max-width: 120px;
-    max-height: 160px;
-    object-fit: contain;
-}
-
-/* === NAME === */
-
-.item-name {
-    font-size: 13px;
-    margin-top: 6px;
-    text-align: center;
-}
-/* ===== EVENT BOX ===== */
-
-.event-box {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.event-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-}
-
-.event-item button {
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-.delete-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-}
-
-.delete-btn img {
-    width: 18px;
-    height: 18px;
-    opacity: 0.7;
-    transition: opacity 0.2s ease;
-}
-
-.delete-btn:hover img {
-    opacity: 1;
-}
-
-/* ===== COLLAGE ===== */
-
-.collage {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.collage img {
-    width: 100%;
-    height: 90px;
-    object-fit: contain;
-    border-radius: 10px;
-    background: #fafafa;
-}
-
-/* ===== FORMS ===== */
-
-input[type="date"],
-textarea {
-    font-family: inherit;
-    padding: 8px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-}
-
-textarea {
-    resize: vertical;
-}
-
-/* ===== BUTTONS ===== */
-
-button {
-    padding: 8px 12px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 13px;
-
-}
-
-button:hover {
-    background: var(--accent-hover);
-}
-
-/* ===== STATES ===== */
-
-.success {
-    color: #15803d;
-    font-size: 13px;
-}
-
-.error {
-    color: #b91c1c;
-    font-size: 13px;
-}
-
-.muted {
-    color: var(--text-secondary);
-    font-size: 13px;
-}
-
-hr {
-    border: none;
-    border-top: 1px solid #eee;
-    margin: 16px 0;
-}
-</style>
+<link rel="stylesheet" href="/static/base.css?v=3">
 </head>
 
 <body>
 
-<!-- <h2>Wear Event</h2> -->
-<header>
+<header class="app-header">
     <h1>Внести запись эвента</h1>
     <a class="back-btn" href="index.html">← На главную</a>
 </header>
 
-<div class="container">
+<div class="container grid two">
 
 <!-- ===== LEFT ===== -->
 <div class="left">
     <h3>Гардероб</h3>
 
+    <input
+        type="search"
+        id="itemSearch"
+        placeholder="Поиск по названию или бренду…"
+        style="width:100%; margin-bottom:12px;"
+    >
+
     <div id="categories" class="categories"></div>
 
     <div class="grouping">
-        <button data-mode="none" class="active">Без групп</button>
-        <button data-mode="season">По сезону</button>
-        <button data-mode="style">По стилю</button>
+        <button type="button" data-mode="none" class="active">Без групп</button>
+        <button type="button" data-mode="season">По сезону</button>
+        <button type="button" data-mode="style">По стилю</button>
     </div>
 
     <div id="itemsGrid"></div>
@@ -338,16 +43,12 @@ hr {
     <div class="event-box">
         <h3>Текущий выход</h3>
 
-        <p>
-            Event: <b id="eventLabel"></b><br>
-        </p>
-        <div>
-            <button id="goToLogsBtn">Перейти к логам</button>
-            <button id="newEventBtn" style="margin-top:10px; display:none;">
-                Добавить ещё один выход
-            </button>
-        </div>
-        <input type="date" id="eventDate">
+        <label>
+            Дата:
+            <input type="date" id="eventDate">
+        </label>
+
+        <p class="muted" id="eventLabel" style="margin-top:8px;"></p>
 
         <div id="eventItems"></div>
 
@@ -355,282 +56,29 @@ hr {
 
         <textarea id="notes" placeholder="Заметка" style="width:100%; margin-top:10px"></textarea>
 
-        <button id="saveBtn">Сохранить выход</button>
+        <button type="button" id="saveBtn" class="icon-btn primary" style="margin-top:10px;">
+            Сохранить выход
+        </button>
+        <button type="button" id="newEventBtn" class="icon-btn" style="display:none; margin-top:10px;">
+            Добавить ещё один выход
+        </button>
+
         <p id="status"></p>
 
         <hr>
 
         <h4>Только что сохранённый выход</h4>
         <div id="savedEvent" class="muted">Пока нет данных</div>
+
+        <a class="back-btn" href="/static/add_wear_log.html" style="margin-top:16px;">
+            Перейти к логам →
+        </a>
     </div>
 </div>
 
 </div>
 
-<script>
-const gridRoot = document.getElementById("itemsGrid");
-const categoriesDiv = document.getElementById("categories");
-const eventItemsDiv = document.getElementById("eventItems");
-const collageDiv = document.getElementById("collage");
-const statusEl = document.getElementById("status");
-const savedEventDiv = document.getElementById("savedEvent");
-
-let itemsByCategory = {};
-let itemsById = {};
-let selectedItemIds = new Set();
-let currentCategory = null;
-let groupingMode = "none";
-let currentEventId = Math.floor(Date.now() / 1000);
-
-document.getElementById("eventLabel").textContent = currentEventId;
-
-/* ===== NAV ===== */
-
-document.getElementById("goToLogsBtn").onclick = () => {
-    window.location.href = "/static/add_wear_log.html";
-};
-
-/* ===== GROUPING BUTTONS ===== */
-
-document.querySelectorAll(".grouping button").forEach(btn => {
-    btn.onclick = () => {
-        groupingMode = btn.dataset.mode;
-        document.querySelectorAll(".grouping button")
-            .forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        renderItems();
-    };
-});
-
-/* ===== LOAD ITEMS ===== */
-
-async function loadItems() {
-    const res = await fetch("/items/");
-    const items = await res.json();
-
-    itemsByCategory = {};
-    itemsById = {};
-
-    items.forEach(item => {
-        itemsById[item.id] = item;
-        const cat = item.category || "Other";
-        if (!itemsByCategory[cat]) itemsByCategory[cat] = [];
-        itemsByCategory[cat].push(item);
-    });
-
-    renderCategories();
-}
-
-/* ===== CATEGORIES ===== */
-
-function renderCategories() {
-    categoriesDiv.innerHTML = "";
-
-    Object.keys(itemsByCategory).forEach((cat, idx) => {
-        const btn = document.createElement("button");
-        btn.textContent = cat;
-
-        if (!currentCategory && idx === 0) currentCategory = cat;
-        if (cat === currentCategory) btn.classList.add("active");
-
-        btn.onclick = () => {
-            currentCategory = cat;
-            renderCategories();
-            renderItems();
-        };
-
-        categoriesDiv.appendChild(btn);
-    });
-
-    renderItems();
-}
-
-/* ===== ITEMS ===== */
-
-function renderItems() {
-    gridRoot.innerHTML = "";
-    const items = itemsByCategory[currentCategory] || [];
-
-    if (groupingMode === "none") {
-        const grid = createGrid(items);
-        gridRoot.appendChild(grid);
-    } else {
-        const groups = {};
-
-        items.forEach(item => {
-            const key = item[groupingMode] || "Other";
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(item);
-        });
-
-        Object.keys(groups).sort().forEach(groupName => {
-            const section = document.createElement("div");
-            section.className = "group";
-
-            const title = document.createElement("div");
-            title.className = "group-title";
-            title.textContent = groupName;
-
-            section.appendChild(title);
-            section.appendChild(createGrid(groups[groupName]));
-            gridRoot.appendChild(section);
-        });
-    }
-
-    renderEventItems();
-    renderCollage();
-}
-
-function createGrid(items) {
-    const grid = document.createElement("div");
-    grid.className = "grid";
-
-    items.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "item";
-
-        if (selectedItemIds.has(item.id)) {
-            card.classList.add("selected");
-        }
-
-        if (item.image_path && item.category) {
-            const imageWrapper = document.createElement("div");
-            imageWrapper.className = "item-image";
-
-            const img = document.createElement("img");
-            const file = item.image_path
-                .split("/")
-                .pop()
-                .replace(/\.[^/.]+$/, "");
-
-            img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
-
-            imageWrapper.appendChild(img);
-            card.appendChild(imageWrapper);
-        }
-
-        const name = document.createElement("div");
-        name.className = "item-name";
-        name.textContent = item.item;
-
-        card.appendChild(name);
-
-        card.onclick = () => toggleItem(item.id);
-
-        grid.appendChild(card);
-    });
-
-    return grid;
-}
-
-/* ===== EVENT SIDE ===== */
-
-function toggleItem(id) {
-    selectedItemIds.has(id)
-        ? selectedItemIds.delete(id)
-        : selectedItemIds.add(id);
-
-    renderItems();
-}
-
-function renderEventItems() {
-    eventItemsDiv.innerHTML = "";
-
-    selectedItemIds.forEach(id => {
-        const row = document.createElement("div");
-        row.className = "event-item";
-        row.innerHTML = `
-            <span>${itemsById[id].item}</span>
-            <button class="delete-btn">
-                <img src="/static/icons/delete.png" alt="Удалить">
-            </button>
-        `;
-        row.querySelector("button").onclick = () => {
-            selectedItemIds.delete(id);
-            renderItems();
-        };
-        eventItemsDiv.appendChild(row);
-    });
-}
-function createNewEvent() {
-    currentEventId = Math.floor(Date.now() / 1000);
-    document.getElementById("eventLabel").textContent = currentEventId;
-
-    selectedItemIds.clear();
-    document.getElementById("eventDate").value = "";
-    document.getElementById("notes").value = "";
-
-    savedEventDiv.textContent = "Пока нет данных";
-
-    statusEl.textContent = "";
-    statusEl.className = "";
-
-    renderItems();
-}
-
-
-/* ===== COLLAGE ===== */
-
-function renderCollage() {
-    collageDiv.innerHTML = "";
-
-    selectedItemIds.forEach(id => {
-        const item = itemsById[id];
-        if (!item.image_path) return;
-
-        const img = document.createElement("img");
-        const file = item.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
-        img.src = `/segmented/${item.category}/${file}_${item.category}.png`;
-        collageDiv.appendChild(img);
-    });
-}
-
-/* ===== SAVE ===== */
-
-document.getElementById("saveBtn").onclick = async () => {
-    const date = document.getElementById("eventDate").value;
-    const notes = document.getElementById("notes").value || null;
-
-    if (!date || selectedItemIds.size === 0) {
-        statusEl.textContent = "Выберите дату и items";
-        statusEl.className = "error";
-        return;
-    }
-
-    const savedItems = [];
-
-    for (const itemId of selectedItemIds) {
-        await fetch("/wear_log/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                item_id: itemId,
-                event_id: currentEventId,
-                date,
-                notes
-            })
-        });
-        savedItems.push(itemsById[itemId].item);
-    }
-
-    savedEventDiv.innerHTML = `
-        <b>Event ${currentEventId}</b>
-        ${savedItems.map(i => `<div>• ${i}</div>`).join("")}
-    `;
-
-    statusEl.textContent = "✔ Выход сохранён";
-    statusEl.className = "success";
-    document.getElementById("newEventBtn").style.display = "block";
-};
-
-document.getElementById("newEventBtn").onclick = () => {
-    createNewEvent();
-    document.getElementById("newEventBtn").style.display = "none";
-};
-/* ===== INIT ===== */
-
-loadItems();
-</script>
+<script src="/static/wear_event.js?v=3"></script>
 
 </body>
 </html>

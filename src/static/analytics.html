@@ -2,75 +2,16 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Аналитика гардероба</title>
+    <link rel="stylesheet" href="/static/base.css?v=3">
 
     <style>
-        :root {
-            --bg: #f5f6f8;
-            --card-bg: #ffffff;
-            --text-main: #1f2933;
-            --text-secondary: #6b7280;
-            --accent: #7c3aed;
-            --accent-hover: #6d28d9;
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            --radius: 18px;
-        }
-
-        body {
-            margin: 0;
-            font-family: system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text-main);
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 32px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 32px;
-        }
-
-        .back-btn {
-            padding: 10px 16px;
-            background: var(--accent);
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .back-btn:hover {
-            background: var(--accent-hover);
-        }
-
+        /* Правила ниже используются только на этой странице,
+           поэтому не выносились в общий base.css. */
         .container {
-            padding: 0 32px 48px;
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: var(--shadow);
-        }
-
-        .card h2 {
-            margin-top: 0;
-            font-size: 20px;
-            margin-bottom: 16px;
+            /* header уже даёт отступ сверху 32px — здесь его не дублируем */
+            padding-top: 0;
         }
 
         ul {
@@ -82,164 +23,211 @@
         li {
             padding: 6px 0;
             font-size: 14px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-soft);
         }
 
-        .stat {
-            font-size: 28px;
+        li.zero-usage {
+            color: var(--text-main);
             font-weight: 600;
         }
 
-        .stat-label {
+        .analytics-form label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 13px;
             color: var(--text-secondary);
         }
 
-        label {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        input {
-            margin-left: 6px;
-            padding: 4px 6px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
+        .analytics-form input {
             width: 100px;
         }
 
-        button {
-            margin-top: 8px;
-            padding: 8px 12px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+        .analytics-form .icon-btn {
+            margin-top: 12px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ===== HEADLINE (сводные цифры наверху) =====
+           Раньше это была рядовая карточка "Общее" третьей по счёту
+           среди шести равнозначных блоков — теперь это первое, что
+           видит пользователь, на всю ширину и крупнее остальных. */
+        .headline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+
+        .headline .stat {
+            font-size: 34px;
+        }
+
+        .headline-item {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        @media (max-width: 560px) {
+            .headline {
+                gap: 20px;
+            }
+            .headline .stat {
+                font-size: 26px;
+            }
+        }
+
+        /* ===== BALANCE CHART LEGEND =====
+           Chart.js показывает цифры только по наведению (hover),
+           что на телефоне неудобно (тап-и-жди, без явного отклика).
+           Эта легенда дублирует те же данные текстом — видна всегда,
+           работает одинаково на мыши и на тач-экране. */
+        .balance-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .balance-legend-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 13px;
         }
 
-        button:hover {
-            background: var(--accent-hover);
+        .balance-legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            font-size: 11px;
-            border-radius: 6px;
-            background: #fee2e2;
-            color: #991b1b;
-            margin-left: 6px;
+        .balance-legend-label {
+            flex: 1;
+            color: var(--text-main);
+        }
+
+        .balance-legend-value {
+            color: var(--text-secondary);
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
 
-<header>
+<header class="app-header">
     <h1>Аналитика гардероба</h1>
     <a class="back-btn" href="index.html">← На главную</a>
 </header>
 
 <div class="container">
-    <div class="grid">
 
-    <div class="card">
-        <h2>Топ-10 носимых вещей</h2>
-
-        <label>
-            Период:
-            <select id="topPeriod" onchange="togglePeriodInputs()">
-                <option value="all">За всё время</option>
-                <option value="month">За месяц</option>
-                <option value="year">За год</option>
-            </select>
-        </label>
-
-        <div id="datePicker" style="display:none; margin-top:10px;">
-            <label>
-                Выберите месяц:
-                <input type="month" id="topDate">
-            </label>
-
-            <div style="font-size:12px; color:#6b7280; margin-top:4px;">
-                Нажмите на поле, чтобы открыть календарь  
-                (для годовой статистики выберите любой месяц нужного года)
-            </div>
+    <!-- ===== HEADLINE ===== -->
+    <div class="card headline">
+        <div class="headline-item">
+            <div class="stat" id="total-cost">—</div>
+            <div class="stat-label">Общая стоимость гардероба</div>
         </div>
-
-        <button onclick="loadTopItems()">Применить</button>
-
-        <ul id="top-items"></ul>
-    </div>
-    <div class="card">
-        <h2>Редко надеваемые вещи</h2>
-
-        <label>
-            Период:
-            <select id="leastPeriod" onchange="toggleLeastPeriodInputs()">
-                <option value="all">За всё время</option>
-                <option value="month">За месяц</option>
-                <option value="year">За год</option>
-            </select>
-        </label>
-
-        <div id="leastDatePicker" style="display:none; margin-top:10px;">
-            <label>
-                Выберите месяц:
-                <input type="month" id="leastDate">
-            </label>
+        <div class="headline-item">
+            <div class="stat" id="items-count">—</div>
+            <div class="stat-label">Количество вещей</div>
         </div>
-
-        <button onclick="loadLeastUsedItems()">
-            Применить
-        </button>
-
-        <ul id="least-items"></ul>
+        <div class="headline-item">
+            <div class="stat" id="avg-cpu">—</div>
+            <div class="stat-label">Средняя стоимость выхода</div>
+        </div>
+        <div class="headline-item">
+            <div class="stat" id="median-cpu">—</div>
+            <div class="stat-label">Медианная стоимость выхода</div>
+        </div>
+        <div class="headline-item">
+            <div class="stat" id="total-cpu">—</div>
+            <div class="stat-label">Суммарный cost per use</div>
+        </div>
     </div>
-    <div class="card">
-        <h2>Общее</h2>
 
-        <div class="stat" id="total-cost">—</div>
-        <div class="stat-label">Общая стоимость гардероба</div>
-        <br>
-
-        <div class="stat" id="items-count">—</div>
-        <div class="stat-label">Количество вещей</div>
-
-        <hr style="margin:16px 0; border:none; border-top:1px solid #eee;">
-
-        <ul>
-            <li>
-                <strong id="avg-cpu">—</strong>
-                <div class="stat-label">Средняя стоимость выхода</div>
-            </li>
-            <li>
-                <strong id="median-cpu">—</strong>
-                <div class="stat-label">Медианная стоимость выхода</div>
-            </li>
-            <li>
-                <strong id="total-cpu">—</strong>
-                <div class="stat-label">Суммарный cost per use</div>
-            </li>
-        </ul>
-    </div>
+    <div class="grid auto">
 
         <div class="card">
             <h2>Баланс гардероба</h2>
 
-            <label>
-                Агрегировать по:
-                <select id="balanceType" onchange="updateBalanceChart()">
-                    <option value="by_category">Категориям</option>
-                    <option value="by_season">Сезонам</option>
-                    <option value="by_style">Стилям</option>
-                </select>
-            </label>
+            <form class="analytics-form" onsubmit="return false">
+                <label>
+                    Агрегировать по:
+                    <select id="balanceType" onchange="updateBalanceChart()">
+                        <option value="by_category">Категориям</option>
+                        <option value="by_season">Сезонам</option>
+                        <option value="by_style">Стилям</option>
+                    </select>
+                </label>
+            </form>
 
             <canvas id="balanceChart" style="margin-top:16px;"></canvas>
+            <div id="balanceLegend" class="balance-legend"></div>
         </div>
-        
+
+        <div class="card">
+            <h2>Топ-10 носимых вещей</h2>
+
+            <form class="analytics-form" onsubmit="return false">
+                <label>
+                    Период:
+                    <select id="topPeriod" onchange="togglePeriodInputs()">
+                        <option value="all">За всё время</option>
+                        <option value="month">За месяц</option>
+                        <option value="year">За год</option>
+                    </select>
+                </label>
+
+                <div id="datePicker" style="display:none; margin-top:10px;">
+                    <label>
+                        Выберите месяц:
+                        <input type="month" id="topDate">
+                    </label>
+                    <div class="hint">
+                        Нажмите на поле, чтобы открыть календарь
+                        (для годовой статистики выберите любой месяц нужного года)
+                    </div>
+                </div>
+
+                <button type="button" onclick="loadTopItems()" class="icon-btn primary">Применить</button>
+            </form>
+
+            <ul id="top-items"></ul>
+        </div>
+
+        <div class="card">
+            <h2>Редко надеваемые вещи</h2>
+
+            <form class="analytics-form" onsubmit="return false">
+                <label>
+                    Период:
+                    <select id="leastPeriod" onchange="toggleLeastPeriodInputs()">
+                        <option value="all">За всё время</option>
+                        <option value="month">За месяц</option>
+                        <option value="year">За год</option>
+                    </select>
+                </label>
+
+                <div id="leastDatePicker" style="display:none; margin-top:10px;">
+                    <label>
+                        Выберите месяц:
+                        <input type="month" id="leastDate">
+                    </label>
+                </div>
+
+                <button type="button" onclick="loadLeastUsedItems()" class="icon-btn primary">Применить</button>
+            </form>
+
+            <ul id="least-items"></ul>
+        </div>
+
         <div class="card">
             <h2>Самые выгодные вещи</h2>
             <ul id="best-value"></ul>
@@ -248,18 +236,20 @@
         <div class="card">
             <h2>Дорогие ошибки</h2>
 
-            <label>
-                Мин. стоимость:
-                <input type="number" id="min-cost" value="10000">
-            </label>
-            <br>
-            <label>
-                Макс. выходов:
-                <input type="number" id="max-usage" value="3">
-            </label>
-            <br>
+            <form class="analytics-form" onsubmit="return false">
+                <label>
+                    Мин. стоимость:
+                    <input type="number" id="min-cost" value="10000">
+                </label>
+                <br>
+                <label>
+                    Макс. выходов:
+                    <input type="number" id="max-usage" value="3">
+                </label>
+                <br>
 
-            <button onclick="loadMistakes()">Применить</button>
+                <button type="button" onclick="loadMistakes()" class="icon-btn primary">Применить</button>
+            </form>
 
             <ul id="mistakes"></ul>
         </div>
@@ -268,258 +258,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-let balanceData = null;
-let balanceChart = null;
-</script>
-<script>
-function togglePeriodInputs() {
-    const period = document.getElementById('topPeriod').value;
+<script src="/static/analytics.js?v=3"></script>
 
-    document.getElementById('datePicker').style.display =
-        period === 'month' || period === 'year' ? 'block' : 'none';
-
-    if (period === 'all') {
-        loadTopItems();
-    }
-}
-
-function toggleLeastPeriodInputs() {
-    const period =
-        document.getElementById('leastPeriod').value;
-
-    document.getElementById('leastDatePicker').style.display =
-        period === 'month' || period === 'year'
-            ? 'block'
-            : 'none';
-
-    if (period === 'all') {
-        loadLeastUsedItems();
-    }
-}
-</script>
-
-<script>
-async function loadTopItems() {
-    const period = document.getElementById('topPeriod').value;
-
-    let url = '/analytics/top-items';
-    const value = document.getElementById('topDate').value;
-
-    if (value) {
-        const [year, month] = value.split('-');
-
-        if (period === 'month') {
-            const from = `${year}-${month}-01`;
-            const to = new Date(year, month, 0)
-                .toISOString()
-                .slice(0, 10);
-
-            url += `?date_from=${from}&date_to=${to}`;
-        }
-
-        if (period === 'year') {
-            url += `?date_from=${year}-01-01&date_to=${year}-12-31`;
-        }
-    }
-
-    const topItems = await fetch(url).then(r => r.json());
-
-    document.getElementById('top-items').innerHTML =
-        topItems.length
-            ? topItems.map(i =>
-                `<li>${i.item} — ${i.usage_count} выходов</li>`
-              ).join('')
-            : '<li>Нет данных за выбранный период</li>';
-}
-
-async function loadLeastUsedItems() {
-    const period =
-        document.getElementById('leastPeriod').value;
-
-    let url = '/analytics/least-used-items';
-
-    const value =
-        document.getElementById('leastDate').value;
-
-    if (value) {
-        const [year, month] = value.split('-');
-
-        if (period === 'month') {
-            const from = `${year}-${month}-01`;
-
-            const to = new Date(year, month, 0)
-                .toISOString()
-                .slice(0, 10);
-
-            url += `?date_from=${from}&date_to=${to}`;
-        }
-
-        if (period === 'year') {
-            url += `?date_from=${year}-01-01&date_to=${year}-12-31`;
-        }
-    }
-
-    const items = await fetch(url).then(r => r.json());
-
-    document.getElementById('least-items').innerHTML =
-        items.length
-            ? items.map(i => `
-                <li style="${
-                    i.usage_count === 0
-                        ? 'color:#000000;font-weight:600'
-                        : ''
-                }">
-                    ${i.item} — ${i.usage_count} выходов
-                </li>
-            `).join('')
-            : '<li>Нет данных за выбранный период</li>';
-}
-</script>
-
-<script>
-function rub(value) {
-    return value !== null ? `${Math.round(value)} ₽` : '—';
-}
-async function loadBaseAnalytics() {
-    // const topItems = await fetch('/analytics/top-items').then(r => r.json());
-    // document.getElementById('top-items').innerHTML =
-    //    topItems.map(i => `<li>${i.item} — ${i.usage_count} выходов</li>`).join('');
-
-    const cost = await fetch('/analytics/cost-stats').then(r => r.json());
-
-    // cost per use
-    document.getElementById('avg-cpu').textContent =
-        rub(cost.avg_cpu);
-
-    document.getElementById('median-cpu').textContent =
-        rub(cost.median_cpu);
-
-    // агрегаты
-    document.getElementById('total-cost').textContent =
-        rub(cost.total_cost);
-
-    document.getElementById('items-count').textContent =
-        cost.items_count !== null ? Math.round(cost.items_count) : '—';
-
-    document.getElementById('total-cpu').textContent =
-        rub(cost.total_cost_per_use);
-
-    balanceData = await fetch('/analytics/distribution').then(r => r.json());
-    renderBalanceChart('by_category');
-
-    const best = await fetch('/analytics/best-value').then(r => r.json());
-    document.getElementById('best-value').innerHTML =
-        best.map(i => `<li>${i.item} — ${rub(i.cost_per_use)}</li>`).join('');
-}
-
-async function loadMistakes() {
-    const minCost = document.getElementById('min-cost').value;
-    const maxUsage = document.getElementById('max-usage').value;
-
-    const url = `/analytics/expensive-mistakes?min_cost=${minCost}&max_usage=${maxUsage}`;
-    const mistakes = await fetch(url).then(r => r.json());
-
-    document.getElementById('mistakes').innerHTML =
-        mistakes.map(i =>
-            `<li>
-                ${i.item} — ${i.cost} ₽ (${i.usage} выходов)
-                ${i.badge ? `<span class="badge">импульсивная?</span>` : ''}
-            </li>`
-        ).join('');
-}
-
-loadBaseAnalytics();
-loadMistakes();
-
-</script>
-<script>
-function renderBalanceChart(type) {
-    const data = balanceData[type];
-
-    const sorted = [...data].sort(
-        (a, b) => b.items_count - a.items_count
-    );
-
-    const labels = sorted.map(d => d.key);
-    const values = sorted.map(d => d.items_count);
-    const costs = sorted.map(d => d.total_cost);
-
-    const ctx = document.getElementById('balanceChart');
-    const labelMap = {
-        by_category: 'Категория',
-        by_season: 'Сезон',
-        by_style: 'Стиль'
-    };
-    if (balanceChart) {
-        balanceChart.destroy();
-    }
-
-    balanceChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels,
-            datasets: [{
-                data: values,
-                backgroundColor: [
-                    '#7c3aed',
-                    '#60a5fa',
-                    '#34d399',
-                    '#fbbf24',
-                    '#f87171',
-                    '#a78bfa',
-                    '#fb7185'
-                ],
-                meta: costs,
-                aggType: type
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            const i = context.dataIndex;
-                            const count = context.dataset.data[i];
-                            const cost = context.dataset.meta[i];
-                            const aggType = context.dataset.aggType;
-                            const labelName = labelMap[aggType];
-
-                            return [
-                                `Вещей: ${count}`,
-                                `Общая стоимость: ${Math.round(cost)} ₽`
-                            ];
-
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-function updateBalanceChart() {
-    const type = document.getElementById('balanceType').value;
-    renderBalanceChart(type);
-}
-</script>
-<script>
-loadTopItems();
-loadLeastUsedItems();
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const currentMonth =
-        new Date().toISOString().slice(0, 7);
-
-    document.getElementById('topDate').value =
-        currentMonth;
-
-    document.getElementById('leastDate').value =
-        currentMonth;
-});
-</script>
 </body>
 </html>

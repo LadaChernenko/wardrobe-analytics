@@ -2,309 +2,87 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Гардероб</title>
-    <link rel="stylesheet" href="/static/base.css">
-
-    <style>
-        /* ===== VIEW SWITCH ===== */
-        .view-switch {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .view-switch button {
-            padding: 6px 12px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            background: #fafafa;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .view-switch button.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-        
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 32px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 32px;
-        }
-
-        .back-btn {
-            padding: 10px 16px;
-            background: var(--accent);
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .back-btn:hover {
-            background: var(--accent-hover);
-        }
-        /* ===== GALLERY ===== */
-        .content-card {
-            max-width: 1400px;      /* чтобы не растягивалось на ультрашироких */
-            margin: 0 auto;         /* центрирование */
-            padding: 20px 24px;     /* отступы от краёв */
-            background: var(--card-bg);
-            border-radius: 18px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
-        }
-        .group {
-            margin-bottom: 28px;
-        }
-
-        .group-title {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-        }
-
-        .item-card {
-            background: #fafafa;
-            border-radius: 14px;
-            padding: 8px;
-            position: relative;
-            border: 2px solid transparent;
-
-            display: flex;
-            flex-direction: column;
-            height: 220px; 
-        }
-        .item-image {
-            flex: 1;                      
-            display: flex;
-            align-items: center;          
-            justify-content: center;      
-        }
-
-        .item-image img {
-            max-width: 120px;
-            max-height: 160px;
-            object-fit: contain;
-        }
-
-        .item-name {
-            font-size: 13px;
-            margin-top: 6px;
-            text-align: center;
-        }
-
-        .item-actions {
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            right: 6px;
-
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .item-actions button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        label {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        input[type="color"] {
-            width: 10px;
-            height: 10px;
-            padding: 0;
-            border: none;
-            cursor: pointer;
-        }
-
-        /* ===== TABLE ===== */
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
-        }
-
-        th {
-            text-align: left;
-            color: var(--text-secondary);
-        }
-
-        tr {
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        tr:hover {
-            transform: scale(1.01);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            /* border: 1px solid rgba(0,0,0,0.1); */
-        }
-
-
-        th[data-sort] {
-            cursor: pointer;
-            user-select: none;
-            position: relative;
-            padding-right: 18px;
-        }
-
-        th[data-sort]:hover {
-            color: var(--accent);
-        }
-
-        th[data-sort]::after {
-            content: "⇅";
-            position: absolute;
-            right: 6px;
-            opacity: 0.3;
-            font-size: 12px;
-        }
-
-        th.sorted.asc::after {
-            content: "▲";
-            opacity: 1;
-        }
-
-        th.sorted.desc::after {
-            content: "▼";
-            opacity: 1;
-        }
-
-        th.sorted {
-            color: var(--accent);
-            font-weight: 500;
-        }
-        td {
-            transition: background-color 0.2s ease;
-        }
-
-        td.actions button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        /* ===== ICONS ===== */
-
-
-        .icon-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            background: #fafafa;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .icon-btn img {
-            width: 16px;
-            height: 16px;
-            opacity: 0.8;
-        }
-
-        .icon-btn:hover img {
-            opacity: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/base.css?v=3">
 </head>
 
 <body>
 
-<header>
+<header class="app-header">
     <h1>Мой гардероб</h1>
     <a class="back-btn" href="index.html">← На главную</a>
 </header>
 
-<button onclick="openCreate()" class="icon-btn" title="Добавить предмет">
-    <img src="/static/icons/add.png" alt="Добавить предмет">
-    <span>Добавить предмет</span>
-</button>
-<button type="button" onclick="exportItemsCSV()" class="icon-btn" title="Экспорт CSV">
-    <img src="/static/icons/save.png" alt="Экспорт CSV">
-    <span>Экспорт CSV</span>
-</button>
-<div class="controls">
+<div class="container">
 
-    <div class="view-switch">
-        <button id="viewTableBtn" class="active">Таблица</button>
-        <button id="viewGridBtn">Галерея</button>
+    <div class="controls">
+        <button type="button" onclick="openCreate()" class="icon-btn primary" title="Добавить предмет">
+            <img src="/static/icons/add.png" alt="">
+            <span>Добавить предмет</span>
+        </button>
+        <button type="button" onclick="exportItemsCSV()" class="icon-btn" title="Экспорт CSV">
+            <img src="/static/icons/save.png" alt="">
+            <span>Экспорт CSV</span>
+        </button>
     </div>
 
-    <select id="filterCategory">
-        <option value="">Все категории</option>
-        <option value="skirt">Юбка</option>
-        <option value="upper_clothes">Верхняя одежда</option>
-        <option value="tops">Верх</option>
-        <option value="pants">Брюки</option>
-        <option value="dress">Платье</option>
-        <option value="bag">Сумка</option>
-        <option value="hat">Головной убор</option>
-        <option value="shoes">Обувь</option>
-    </select>
+    <div class="controls">
+        <div class="view-switch">
+            <button type="button" id="viewTableBtn">Таблица</button>
+            <button type="button" id="viewGridBtn" class="active">Галерея</button>
+        </div>
 
-    <select id="groupMode">
-        <option value="none">Без групп</option>
-        <option value="category">По категории</option>
-        <option value="season">По сезону</option>
-        <option value="style">По стилю</option>
-    </select>
+        <select id="filterCategory">
+            <option value="">Все категории</option>
+            <option value="skirt">Юбка</option>
+            <option value="upper_clothes">Верхняя одежда</option>
+            <option value="tops">Верх</option>
+            <option value="pants">Брюки</option>
+            <option value="dress">Платье</option>
+            <option value="bag">Сумка</option>
+            <option value="hat">Головной убор</option>
+            <option value="shoes">Обувь</option>
+        </select>
+
+        <!-- Группировка имеет смысл только в галерее — в табличном виде
+             мы скрываем этот select через JS, чтобы он не выглядел
+             рабочим, но ничего не делающим. -->
+        <span id="groupModeWrap">
+            <select id="groupMode">
+                <option value="none">Без групп</option>
+                <option value="category">По категории</option>
+                <option value="season">По сезону</option>
+                <option value="style">По стилю</option>
+            </select>
+        </span>
+    </div>
+
+    <!-- ===== TABLE / GRID VIEW ===== -->
+    <div class="content-card">
+        <table id="tableView" style="display:none">
+            <thead>
+            <tr>
+                <th>Название</th>
+                <th>Бренд</th>
+                <th>Категория</th>
+                <th>Сезон</th>
+                <th>Год</th>
+                <th>Стиль</th>
+                <th data-sort="cost">Стоимость</th>
+                <th data-sort="use">Использований</th>
+                <th data-sort="cost_per_use">Cost / use</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="itemsTable"></tbody>
+        </table>
+
+        <div id="gridView"></div>
+    </div>
+
 </div>
 
-<!-- ===== TABLE VIEW ===== -->
-<div class="content-card">
-    <table id="tableView">
-        <thead>
-        <tr>
-            <th>Название</th>
-            <th>Бренд</th>
-            <th>Категория</th>
-            <th>Сезон</th>
-            <th>Год</th>
-            <th>Стиль</th>
-            <th data-sort="cost">Стоимость</th>
-            <th data-sort="use">Использований</th>
-            <th data-sort="cost_per_use">Cost / use</th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody id="itemsTable"></tbody>
-    </table>
-
-    <!-- ===== GRID VIEW ===== -->
-
-    <div id="gridView" style="display:none"></div>
-</div>
 <!-- ===== MODAL ===== -->
 
 <div class="modal" id="itemModal">
@@ -336,22 +114,16 @@
 
             <input name="year_of_buying" type="number" placeholder="Год покупки">
             <input name="style" placeholder="Стиль">
+
             <label>
                 Основной цвет:
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div id="colourPreview" style="
-                        width: 30px;
-                        height: 30px;
-                        border-radius: 6px;
-                        border: 1px solid #ccc;
-                    "></div>
-
+                <div class="colour-row">
+                    <div id="colourPreview" class="colour-preview"></div>
                     <input type="color" id="colourPicker">
                 </div>
-
-                <input 
-                    type="text" 
-                    name="colour" 
+                <input
+                    type="text"
+                    name="colour"
                     id="colourInput"
                     placeholder="#000000"
                     pattern="^#[0-9A-Fa-f]{6}$"
@@ -359,43 +131,39 @@
             </label>
 
             <label>
-                Доп. цвет:
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div id="extraColourPreview" style="
-                        width: 30px;
-                        height: 30px;
-                        border-radius: 6px;
-                        border: 1px solid #ccc;
-                    "></div>
-                    <input type="color" id="colourPicker">
-                    <input 
-                        type="text" 
-                        name="extra_colour" 
+                Доп. цвет (необязательно):
+                <div class="colour-row">
+                    <div id="extraColourPreview" class="colour-preview"></div>
+                    <input type="color" id="extraColourPicker">
+                    <input
+                        type="text"
+                        name="extra_colour"
                         id="extraColourInput"
                         placeholder="#ffffff"
                         pattern="^#[0-9A-Fa-f]{6}$"
                     >
                 </div>
             </label>
+
             <input name="cost" type="number" placeholder="Стоимость">
             <input name="use" type="number" placeholder="Использований">
 
             <input type="file" name="image" accept="image/*">
-            <img id="preview">
+            <img id="preview" alt="Превью изображения вещи">
 
-            <div style="display:flex; justify-content:space-between;">
-                <button type="submit" class="icon-btn" title="Сохранить">
-                    <img src="/static/icons/save.png" alt="Сохранить">
+            <div class="form-actions">
+                <button type="submit" class="icon-btn primary" title="Сохранить">
+                    <img src="/static/icons/save.png" alt="">
                     <span>Сохранить</span>
                 </button>
 
-                <button type="button" onclick="closeModal()">Отмена</button>
+                <button type="button" class="ghost" onclick="closeModal()">Отмена</button>
             </div>
         </form>
     </div>
 </div>
 
-<script src="/static/items.js"></script>
+<script src="/static/items.js?v=3"></script>
 
 </body>
 </html>

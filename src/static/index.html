@@ -2,118 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Гардероб — старт</title>
-    <!-- <link rel="stylesheet" href="/static/base.css"> -->
-    <style>
-        :root {
-            --bg: #f5f6f8;
-            --card-bg: #ffffff;
-            --text-main: #1f2933;
-            --text-secondary: #6b7280;
-            --accent: #7c3aed;
-            --accent-hover: #6d28d9;
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            --radius: 18px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: var(--bg);
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            max-width: 900px;
-            width: 100%;
-            padding: 40px 24px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-
-        header h1 {
-            font-size: 36px;
-            margin: 0 0 12px;
-            letter-spacing: -0.02em;
-        }
-
-        header p {
-            margin: 0;
-            font-size: 16px;
-            color: var(--text-secondary);
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 28px 24px;
-            box-shadow: var(--shadow);
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 35px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .card-description {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        .card-action {
-            margin-top: auto;
-            align-self: flex-start;
-            padding: 10px 16px;
-            background: var(--accent);
-            color: white;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background 0.15s ease;
-        }
-
-        .card:hover .card-action {
-            background: var(--accent-hover);
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 48px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-    </style>    
+    <link rel="stylesheet" href="/static/base.css?v=3">
 </head>
-<body>
+<body class="index">
 
     <div class="container">
         <header>
@@ -145,6 +38,7 @@
                 </div>
                 <div class="card-action">Смотреть</div>
             </a>
+
             <a class="card" href="analytics.html">
                 <div class="card-title">Аналитика</div>
                 <div class="card-description">

@@ -5,12 +5,14 @@
 const tableBody = document.getElementById("itemsTable");
 const gridView = document.getElementById("gridView");
 const tableView = document.getElementById("tableView");
+const contentCard = document.querySelector(".content-card");
 
 const viewTableBtn = document.getElementById("viewTableBtn");
 const viewGridBtn = document.getElementById("viewGridBtn");
 
 const filterCategory = document.getElementById("filterCategory");
 const groupMode = document.getElementById("groupMode");
+const groupModeWrap = document.getElementById("groupModeWrap");
 
 const modal = document.getElementById("itemModal");
 const form = document.getElementById("itemForm");
@@ -26,7 +28,7 @@ modalContent.onclick = e => e.stopPropagation();
 
 let allItems = [];
 let currentItemId = null;
-let currentView = "table";
+let currentView = "grid";
 
 let sortConfig = {
     key: null,      // 'cost', 'use', 'cost_per_use'
@@ -34,14 +36,96 @@ let sortConfig = {
 };
 
 /* =========================================================
+   UTILS
+========================================================= */
+
+// Экранируем всё, что вставляем в innerHTML, чтобы название/бренд/стиль
+// вещи не могли исполниться как HTML (XSS). Для простых текстовых узлов
+// вместо этого лучше textContent, но здесь строки собираются шаблоном.
+function escapeHtml(value) {
+    if (value == null) return "";
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function getGradientColor(value, min, max) {
+    if (value == null || isNaN(value)) return "";
+
+    let t = (value - min) / (max - min || 1);
+    t = Math.max(0, Math.min(1, t)); // ограничиваем [0,1]
+
+    const colors = [
+        { r: 222, g: 231, b: 145 }, // DEE791
+        { r: 255, g: 249, b: 189 }, // FFF9BD
+        { r: 255, g: 214, b: 186 }  // FFD6BA
+    ];
+
+    const scaledT = t * (colors.length - 1);
+    const idx = Math.min(colors.length - 2, Math.floor(scaledT));
+    const localT = scaledT - idx;
+
+    const c1 = colors[idx];
+    const c2 = colors[idx + 1];
+
+    const r = Math.round(c1.r + (c2.r - c1.r) * localT);
+    const g = Math.round(c1.g + (c2.g - c1.g) * localT);
+    const b = Math.round(c1.b + (c2.b - c1.b) * localT);
+
+    return `rgb(${r},${g},${b})`;
+}
+
+function segmentedImageUrl(item) {
+    if (!item.image_path || !item.category) return null;
+    const file = item.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
+    return `/segmented/${item.category}/${file}_${item.category}.png`;
+}
+
+// Различаем два случая пустоты: гардероб пуст вообще (показываем
+// приглашение добавить первую вещь) и фильтр просто не дал результатов
+// (показываем нейтральное сообщение без лишнего призыва к действию).
+function emptyStateHtml() {
+    if (allItems.length === 0) {
+        return `
+            <div class="muted" style="text-align:center; padding:32px 16px;">
+                Пока в гардеробе нет вещей.<br>
+                <button type="button" class="icon-btn primary" style="margin-top:12px" onclick="openCreate()">
+                    <img src="/static/icons/add.png" alt="">
+                    <span>Добавить первую вещь</span>
+                </button>
+            </div>
+        `;
+    }
+    return `
+        <div class="muted" style="text-align:center; padding:32px 16px;">
+            Ничего не найдено по этому фильтру.
+        </div>
+    `;
+}
+
+/* =========================================================
    LOAD
 ========================================================= */
 
 async function loadItems() {
-    const res = await fetch("/items/");
-    allItems = await res.json();
-    render();
-    initSorting();
+    try {
+        const res = await fetch("/items/");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allItems = await res.json();
+        render();
+        initSorting();
+    } catch (err) {
+        console.error("Не удалось загрузить вещи:", err);
+        tableBody.innerHTML = `
+            <tr><td colspan="10" class="error">
+                Не удалось загрузить список вещей. Проверьте соединение и обновите страницу.
+            </td></tr>
+        `;
+        gridView.innerHTML = `<p class="error">Не удалось загрузить список вещей.</p>`;
+    }
 }
 
 /* =========================================================
@@ -59,6 +143,10 @@ function switchView(view) {
 
     viewTableBtn.classList.toggle("active", view === "table");
     viewGridBtn.classList.toggle("active", view === "grid");
+
+    // Группировка применяется только к галерее — в табличном виде
+    // прятать select, чтобы он не выглядел рабочим, но ничего не делающим.
+    groupModeWrap.style.display = view === "grid" ? "" : "none";
 
     render();
 }
@@ -128,6 +216,11 @@ function render() {
 function renderTable(items) {
     tableBody.innerHTML = "";
 
+    if (items.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="10">${emptyStateHtml()}</td></tr>`;
+        return;
+    }
+
     const ranges = {
         cost: items.map(i => Number(i.cost)).filter(v => !isNaN(v)),
         use: items.map(i => Number(i.use)).filter(v => !isNaN(v)),
@@ -143,29 +236,31 @@ function renderTable(items) {
     }
 
     items.forEach(i => {
+        // Все текстовые поля экранированы через escapeHtml — раньше
+        // название/бренд/стиль вставлялись как есть, что открывало XSS.
         tableBody.insertAdjacentHTML("beforeend", `
         <tr>
-            <td>${i.item}</td>
-            <td>${i.brand ?? ""}</td>
-            <td>${i.category}</td>
-            <td>${i.season}</td>
-            <td>${i.year_of_buying ?? ""}</td>
-            <td>${i.style ?? ""}</td>
+            <td>${escapeHtml(i.item)}</td>
+            <td>${escapeHtml(i.brand ?? "")}</td>
+            <td>${escapeHtml(i.category)}</td>
+            <td>${escapeHtml(i.season)}</td>
+            <td>${escapeHtml(i.year_of_buying ?? "")}</td>
+            <td>${escapeHtml(i.style ?? "")}</td>
             <td style="background:${getGradientColor(Number(i.cost), minMax.cost.min, minMax.cost.max)}">
-                ${i.cost ?? ""}
+                ${escapeHtml(i.cost ?? "")}
             </td>
             <td style="background:${getGradientColor(Number(i.use), minMax.use.min, minMax.use.max)}">
-                ${i.use ?? ""}
+                ${escapeHtml(i.use ?? "")}
             </td>
             <td style="background:${getGradientColor(Number(i.cost_per_use), minMax.cost_per_use.min, minMax.cost_per_use.max)}">
                 ${i.cost_per_use != null ? Math.round(i.cost_per_use) : ""}
             </td>
             <td class="actions">
-                <button class="icon-btn" onclick='openEdit(${JSON.stringify(i)})'>
-                    <img src="/static/icons/pencil.png">
+                <button class="icon-btn" data-action="edit" data-id="${i.id}" title="Редактировать">
+                    <img src="/static/icons/pencil.png" alt="Редактировать">
                 </button>
-                <button class="icon-btn" onclick='deleteItem(${i.id})'>
-                    <img src="/static/icons/delete.png">
+                <button class="icon-btn" data-action="delete" data-id="${i.id}" title="Удалить">
+                    <img src="/static/icons/delete.png" alt="Удалить">
                 </button>
             </td>
         </tr>
@@ -179,6 +274,11 @@ function renderTable(items) {
 
 function renderGrid(items) {
     gridView.innerHTML = "";
+
+    if (items.length === 0) {
+        gridView.innerHTML = emptyStateHtml();
+        return;
+    }
 
     if (groupMode.value === "none") {
         gridView.appendChild(createGrid(items));
@@ -195,7 +295,12 @@ function renderGrid(items) {
     Object.keys(groups).sort().forEach(key => {
         const block = document.createElement("div");
         block.className = "group";
-        block.innerHTML = `<div class="group-title">${key}</div>`;
+
+        const titleEl = document.createElement("div");
+        titleEl.className = "group-title";
+        titleEl.textContent = key; // textContent — безопасно, экранирование не нужно
+
+        block.appendChild(titleEl);
         block.appendChild(createGrid(groups[key]));
         gridView.appendChild(block);
     });
@@ -203,38 +308,69 @@ function renderGrid(items) {
 
 function createGrid(items) {
     const grid = document.createElement("div");
-    grid.className = "grid";
+    grid.className = "grid items";
 
     items.forEach(i => {
         const card = document.createElement("div");
         card.className = "item-card";
 
-        if (i.image_path && i.category) {
-            const file = i.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
-            card.insertAdjacentHTML("beforeend", `
-                <div class="item-image">
-                    <img src="/segmented/${i.category}/${file}_${i.category}.png">
-                </div>
-            `);
+        const imageUrl = segmentedImageUrl(i);
+        if (imageUrl) {
+            const wrapper = document.createElement("div");
+            wrapper.className = "item-image";
+
+            const img = document.createElement("img");
+            img.src = imageUrl;
+            img.alt = i.item ?? "";
+            wrapper.appendChild(img);
+
+            card.appendChild(wrapper);
         }
 
-        card.insertAdjacentHTML("beforeend", `
-            <div class="item-name">${i.item}</div>
-            <div class="item-actions">
-                <button class="icon-btn" onclick='openEdit(${JSON.stringify(i)})'>
-                    <img src="/static/icons/pencil.png">
-                </button>
-                <button class="icon-btn" onclick='deleteItem(${i.id})'>
-                    <img src="/static/icons/delete.png">
-                </button>
-            </div>
-        `);
+        const name = document.createElement("div");
+        name.className = "item-name";
+        name.textContent = i.item; // textContent сам экранирует — безопасно
 
+        const actions = document.createElement("div");
+        actions.className = "item-actions";
+        actions.innerHTML = `
+            <button class="icon-btn" data-action="edit" data-id="${i.id}" title="Редактировать">
+                <img src="/static/icons/pencil.png" alt="Редактировать">
+            </button>
+            <button class="icon-btn" data-action="delete" data-id="${i.id}" title="Удалить">
+                <img src="/static/icons/delete.png" alt="Удалить">
+            </button>
+        `;
+
+        card.appendChild(name);
+        card.appendChild(actions);
         grid.appendChild(card);
     });
 
     return grid;
 }
+
+/* =========================================================
+   ACTIONS (делегирование кликов)
+
+   Раньше id вещи и весь объект передавались через
+   onclick="openEdit(${JSON.stringify(i)})" прямо в HTML-атрибуте.
+   Это ломалось на апострофах/кавычках в названии вещи (Levi's и т.п.)
+   и было небезопасно. Теперь кнопки несут только data-id,
+   а сам объект ищется в allItems — один обработчик на весь блок.
+========================================================= */
+
+contentCard.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+
+    const id = Number(btn.dataset.id);
+    const item = allItems.find(x => x.id === id);
+    if (!item) return;
+
+    if (btn.dataset.action === "edit") openEdit(item);
+    if (btn.dataset.action === "delete") deleteItem(id);
+});
 
 /* =========================================================
    MODAL
@@ -261,11 +397,14 @@ function openEdit(item) {
         if (input) input.value = item[k] ?? "";
     }
     syncColorInputs();
-    
-    if (item.image_path && item.category) {
-        const file = item.image_path.split("/").pop().replace(/\.[^/.]+$/, "");
-        preview.src = `/segmented/${item.category}/${file}_${item.category}.png`;
+
+    const imageUrl = segmentedImageUrl(item);
+    if (imageUrl) {
+        preview.src = imageUrl;
+        preview.alt = item.item ?? "";
         preview.style.display = "block";
+    } else {
+        preview.style.display = "none";
     }
 
     modal.classList.add("open");
@@ -342,15 +481,11 @@ function bindColor(pickerId, inputId, previewId) {
     });
 }
 
+// Раньше id="extraColourPicker" в разметке отсутствовал (было
+// дублирующееся id="colourPicker" у обоих color-инпутов), и этот
+// bindColor тихо ничего не делал. В items.html id уже исправлен.
 bindColor("colourPicker", "colourInput", "colourPreview");
 bindColor("extraColourPicker", "extraColourInput", "extraColourPreview");
-
-// document.getElementById("colourPicker").value =
-//     document.getElementById("colourInput").value || "#000000";
-
-// document.getElementById("extraColourPicker").value =
-//     document.getElementById("extraColourInput").value || "#ffffff";
-
 
 /* =========================================================
    CRUD
@@ -358,8 +493,15 @@ bindColor("extraColourPicker", "extraColourInput", "extraColourPreview");
 
 async function deleteItem(id) {
     if (!confirm("Удалить предмет?")) return;
-    await fetch(`/items/${id}`, { method: "DELETE" });
-    loadItems();
+
+    try {
+        const res = await fetch(`/items/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        loadItems();
+    } catch (err) {
+        console.error("Не удалось удалить предмет:", err);
+        alert("Не удалось удалить предмет. Попробуйте ещё раз.");
+    }
 }
 
 form.onsubmit = async e => {
@@ -372,45 +514,16 @@ form.onsubmit = async e => {
     const imageInput = form.querySelector('input[name="image"]');
     if (!imageInput.files.length) fd.delete("image");
 
-    const res = await fetch(url, { method, body: fd });
-    if (res.ok) {
+    try {
+        const res = await fetch(url, { method, body: fd });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         closeModal();
         loadItems();
-    } else {
-        alert("Ошибка сохранения");
+    } catch (err) {
+        console.error("Не удалось сохранить предмет:", err);
+        alert("Ошибка сохранения. Проверьте поля и попробуйте снова.");
     }
 };
-
-/* =========================================================
-   UTILS
-========================================================= */
-
-function getGradientColor(value, min, max) {
-    if (value == null || isNaN(value)) return "";
-
-    let t = (value - min) / (max - min || 1);
-    t = Math.max(0, Math.min(1, t)); // ограничиваем [0,1]
-
-    const colors = [
-        { r: 222, g: 231, b: 145 }, // DEE791
-        { r: 255, g: 249, b: 189 }, // FFF9BD
-        { r: 255, g: 214, b: 186 }  // FFD6BA
-    ];
-
-    const scaledT = t * (colors.length - 1);
-    const idx = Math.min(colors.length - 2, Math.floor(scaledT));
-    const localT = scaledT - idx;
-
-    const c1 = colors[idx];
-    const c2 = colors[idx + 1];
-
-    const r = Math.round(c1.r + (c2.r - c1.r) * localT);
-    const g = Math.round(c1.g + (c2.g - c1.g) * localT);
-    const b = Math.round(c1.b + (c2.b - c1.b) * localT);
-
-    return `rgb(${r},${g},${b})`;
-}
-
 
 /* =========================================================
    EVENTS
@@ -420,10 +533,10 @@ filterCategory.onchange = render;
 groupMode.onchange = render;
 modal.onclick = e => e.target === modal && closeModal();
 
-
 function exportItemsCSV() {
     window.location.href = "/items/export/csv";
 }
+
 /* =========================================================
    INIT
 ========================================================= */
